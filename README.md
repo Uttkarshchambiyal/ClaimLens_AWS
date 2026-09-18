@@ -1,0 +1,138 @@
+# ClaimLens
+
+A human-in-the-loop medical claim integrity review prototype. ClaimLens compares an itemized bill, discharge summary, and supporting reports, and presents traceable evidence for a reviewer. It never produces fraud probabilities or approves, rejects, or pays claims.
+
+## Run locally
+
+Use Node.js 22+ and Python 3.11+. All demo patients and providers are fictional.
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+- `/`: dark glassmorphism landing hero, sample preview, and working workspace links.
+- `/review`: reviewer workspace, labeled **MOCK MODE** during local development.
+- `/auth/callback`: Cognito sign-in callback in production.
+
+The four synthetic scenarios cover inconsistent, consistent, ambiguous, and legitimate edge-case packets. Demo reviewer actions and correction annotations persist in this browser's session storage. Demo uploads do **not** perform OCR or fabricate findings; they record an explicit extraction-unavailable result. Use synthetic files only.
+
+## Frontend structure and hero integration
+
+React, TypeScript, Tailwind CSS v4, Lucide icons, and a shadcn-compatible layout are configured:
+
+```text
+frontend/
+  components.json
+  src/
+    components/ui/glassmorphism-trust-hero.tsx
+    components/demo.tsx
+    lib/utils.ts
+    theme.css
+    hero.css
+    styles.css
+```
+
+`@/` resolves to `frontend/src/`. Therefore the component path `@/components/ui` means `frontend/src/components/ui`, not a second folder at the repository root. This directory keeps reusable UI separate from application screens and matches the aliases used by shadcn-generated components. No context provider is needed for the hero.
+
+`HeroSection` accepts optional `reviewHref`, `backgroundImage`, and `className` props. Its sample dialog and animation pause control use local React state. The layout stacks below the large-screen breakpoint, respects reduced-motion preferences, and includes keyboard focus states. Sample metrics are explicitly synthetic; the AWS strip describes the intended architecture, not customers or verified service access.
+
+Tailwind's Vite plugin is registered in `vite.config.ts`. `theme.css` owns the shared charcoal/gold palette, typography, focus states, and surface tokens; `hero.css` imports Tailwind and defines scoped landing animations. `styles.css` applies the same glass cards, pill controls, and palette to the queue, review, activity, documents, source viewer, dialogs, and notifications. Original PDF/image pages retain their own colors so their contents are not altered. Reviewer CSS is lazy-loaded with the workspace. The Unsplash background is bundled locally; attribution is in `public/images/ATTRIBUTION.md`, and visitors do not need an external image request.
+
+Workspace navigation stores the selected analysis and view in the URL, supports Back/Forward, and clears screen-specific search text. The ClaimLens logo returns home. Review tabs support arrow keys, Home, and End. Small screens use labeled horizontal navigation and a dismissible source drawer. A failed correction stays in the form for retry without replacing the visible source.
+
+Setup has already been applied; do not run a new project initializer over this app. To add shadcn components later, run from `frontend/`:
+
+```bash
+npx shadcn@latest add button
+```
+
+For a new checkout, `npm ci` installs TypeScript, Tailwind, Lucide, and the configured dependencies. Reference setup: [Tailwind with Vite](https://tailwindcss.com/docs/installation/using-vite), [shadcn with Vite](https://ui.shadcn.com/docs/installation/vite).
+
+## Local verification
+
+```bash
+# Repository root
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m playwright install chromium
+.venv/bin/python -m pytest backend/tests
+.venv/bin/cfn-lint template.yaml
+.venv/bin/python -m pip_audit -r backend/requirements.txt
+.venv/bin/python -m pip_audit -r requirements-dev.txt
+bash -n scripts/verify_aws.sh
+
+# Frontend directory
+npm test
+npm run format:check
+npm run build
+npm audit --audit-level=high
+```
+
+The full verifier also launches Chromium and exercises the explicit mock journey at desktop and mobile widths:
+
+```bash
+.venv/bin/python scripts/verify_project.py
+```
+
+Backend tests include real SDK serialization against **Moto-emulated** DynamoDB/S3, conditional idempotency leases, tenant boundaries, pinned S3 versions, and API upload-to-report orchestration with injected synthetic extraction. Moto is not evidence of AWS permissions, live Textract, or live Bedrock behavior. Frontend tests cover filters, queue switching, URL restoration, keyboard tabs, document-to-evidence navigation, reviewer actions, correction failures/retry, the upload dialog, duplicate demo requests, report-download initiation, hero links, sample dialog, and animation controls.
+
+## AWS configuration and deployment
+
+`template.yaml` defines Python Lambda/API Gateway, private versioned S3, DynamoDB, Cognito, Step Functions Standard, Textract permissions, and bounded Bedrock comparison. Region and model remain configurable. Deployment has **not** been performed by this implementation pass.
+
+```bash
+sam build
+sam validate --lint
+sam deploy --guided --region <your-region>
+```
+
+Set `BedrockModelId`, `AllowedOrigin`, `CognitoCallbackUrl`, `CognitoLogoutUrl`, `RetentionDays`, and `LogRetentionDays` for the chosen environment. Verify the selected model's regional availability. Cognito users are administrator-provisioned with an immutable `custom:tenant_id`; the browser cannot assign itself a tenant. The API requires an API-Gateway-validated ID token containing that tenant claim.
+
+Frontend variables are in `frontend/.env.example`. Set `VITE_APP_MODE=production` and the deployed API/Cognito values for AWS use. Builds default to production unless mock mode is explicitly selected. Production never silently falls back to fabricated findings. For a deliberately labeled static demo, use `npm run build:demo`.
+
+Configure the frontend host to serve `index.html` for `/review` and `/auth/callback`. Keep the configured callback host, scheme, and port consistent with Cognito.
+
+## AWS verification status
+
+**Not verified against AWS.** The local verifier currently stops because AWS CLI is not installed. No live region, IAM permissions, Textract extraction, Bedrock invocation, Cognito login, or deployed Step Functions execution was established.
+
+Once CLI credentials and your selected region/model are available:
+
+```bash
+AWS_REGION=<region> BEDROCK_MODEL_ID=<model-id> ./scripts/verify_aws.sh
+```
+
+The script checks STS identity, probes Textract GetDocumentAnalysis, and sends a minimal synthetic Bedrock Converse request (which may incur usage charges). It does not create infrastructure. An invalid-job response proves API reachability only, not StartDocumentAnalysis permission. S3, DynamoDB, Step Functions, Cognito, and full extraction still need deployed integration tests.
+
+## Implemented safeguards and known limits
+
+- Integer-paise reconciliation separates invoice total, payment, balance, and claimed amount. Conflicting totals and ambiguous normalization cannot become clean results.
+- Source references retain document/version, page, block IDs, geometry, and extraction confidence. Invalid model citations are rejected; unavailable AI produces an error check alongside deterministic results.
+- S3 is private, encrypted, and versioned. Analysis pins the uploaded S3 version. DynamoDB records and all API lookups are tenant-scoped.
+- Browser uploads use presigned POST policies that enforce the declared content type, AES256 encryption, and a 1-byte-to-15-MB size range before S3 accepts the object.
+- Current and noncurrent S3 objects, DynamoDB records, idempotency records, and Lambda logs have explicit deployment-configurable retention. DynamoDB TTL deletion is asynchronous.
+- Model inputs are bounded and treated as untrusted data. The model has no tools, external browsing, or write access. Routine logs contain error categories, not medical content.
+- Original extraction and analysis snapshots are preserved. Corrections are **annotations only**: they appear in reports but do not yet rerun normalization or checks.
+- Reviewer dispositions persist separately from automated findings. Every disposition change is also appended to an immutable `REVIEW_EVENT` record with the authenticated Cognito subject; correction annotations carry the same actor ID. JSON reports contain the current state and audit activity. There is no cryptographically signed report yet.
+- Production source viewing renders PDF/image bytes with evidence overlays; this is implemented but unverified against a live signed S3 URL. Mock mode shows a labeled synthetic evidence sheet, not an original document.
+- Textract normalization supports a bounded set of labels and amount-column tables, not arbitrary hospital layouts. Adjustments/ambiguous values require review. Clinical sufficiency, OCR accuracy, large-packet scaling, and end-to-end cloud failure recovery still need evaluation.
+- Historical matching finds deterministic invoice candidates, not proof of duplicate payment or fraud.
+
+See [architecture](docs/architecture.md) and [acceptance checks](docs/acceptance.md).
+
+## Hackathon guide and repeatable readiness checks
+
+The [14-page project guide](output/pdf/claimlens-architecture-and-readiness.pdf) explains the website, AWS architecture, component responsibilities, evidence/record model, rules, model boundary, security, reliability, demo script, and live acceptance gate. Its editable source is [docs/claimlens-guide.md](docs/claimlens-guide.md).
+
+Current local results: **59 backend tests and 14 frontend tests pass**, along with dependency consistency, Python compilation, production build, formatting, SAM lint, verifier syntax, and desktop/mobile Chromium acceptance. Four current screenshots were visually inspected. Full npm and Python advisory scans found no known vulnerabilities. Live AWS and production signed-source verification remain outstanding. This is a synthetic local-demo prototype, not a certified AWS-live or production-ready medical system. Event-specific eligibility cannot be confirmed without the hackathon rules.
+
+```bash
+.venv/bin/python scripts/verify_project.py
+# Rebuild the guide after refreshing verification results:
+.venv/bin/python -m pip install -r requirements-docs.txt
+.venv/bin/python scripts/build_project_guide.py
+```
+
+`docs/verification-results.json` records the check outputs and timestamp. `.github/workflows/verify.yml` defines a local-acceptance CI job but has not run remotely yet. PDF rendering uses PyMuPDF when Poppler is unavailable; inspect the generated page images before delivering an updated guide.

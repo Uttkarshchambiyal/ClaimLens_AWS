@@ -1,0 +1,96 @@
+@import 'tailwindcss';
+@import './theme.css';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@keyframes claimlens-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes claimlens-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.hero-enter {
+  animation: claimlens-entrance 0.8s ease-out both;
+}
+.hero-delay-1 {
+  animation-delay: 0.1s;
+}
+.hero-delay-2 {
+  animation-delay: 0.2s;
+}
+.hero-delay-3 {
+  animation-delay: 0.3s;
+}
+.hero-delay-4 {
+  animation-delay: 0.4s;
+}
+.hero-delay-5 {
+  animation-delay: 0.5s;
+}
+.hero-marquee {
+  width: max-content;
+  animation: claimlens-marquee 36s linear infinite;
+}
+.hero-marquee:hover,
+.hero-marquee:focus-within {
+  animation-play-state: paused;
+}
+.hero-services-paused .hero-marquee {
+  animation-play-state: paused;
+}
+.hero-bg {
+  mask-image: linear-gradient(180deg, #000 0%, #000 65%, transparent 100%);
+}
+.hero-title {
+  text-wrap: balance;
+}
+.hero-glass {
+  box-shadow:
+    inset 0 1px 0 #ffffff0a,
+    0 24px 70px #00000030;
+}
+.hero-link:focus-visible {
+  outline: 2px solid #ffcd75;
+  outline-offset: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-enter,
+  .hero-marquee {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .claimlens-hero *,
+  .claimlens-hero *::before,
+  .claimlens-hero *::after {
+    transition: none !important;
+  }
+}

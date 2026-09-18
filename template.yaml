@@ -1,0 +1,392 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ClaimLens source-grounded medical claim integrity review
+
+Parameters:
+  BedrockModelId:
+    Type: String
+    Default: amazon.nova-lite-v1:0
+    Description: Bedrock model available in the deployment region
+  AllowedOrigin:
+    Type: String
+    Default: http://localhost:5173
+  TenantClaim:
+    Type: String
+    Default: custom:tenant_id
+  CognitoCallbackUrl:
+    Type: String
+    Default: http://localhost:5173/auth/callback
+  CognitoLogoutUrl:
+    Type: String
+    Default: http://localhost:5173/
+  MoneyTolerancePaise:
+    Type: Number
+    Default: 100
+  StayDayAllowance:
+    Type: Number
+    Default: 1
+  RoundingMode:
+    Type: String
+    Default: HALF_UP
+    AllowedValues: [HALF_UP, HALF_EVEN]
+  RetentionDays:
+    Type: Number
+    Default: 90
+    MinValue: 1
+    MaxValue: 3650
+  LogRetentionDays:
+    Type: Number
+    Default: 30
+    AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653]
+  DateOrder:
+    Type: String
+    Default: ISO_ONLY
+    AllowedValues: [ISO_ONLY, DMY, MDY]
+    Description: Only ISO dates are normalized unless a numeric date order is explicitly selected
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures: [arm64]
+    MemorySize: 512
+    Timeout: 30
+    Tracing: Active
+    Environment:
+      Variables:
+        APP_MODE: production
+        RECORDS_TABLE: !Ref RecordsTable
+        DOCUMENTS_BUCKET: !Ref DocumentsBucket
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
+        TENANT_CLAIM: !Ref TenantClaim
+        MONEY_TOLERANCE_PAISE: !Ref MoneyTolerancePaise
+        STAY_DAY_ALLOWANCE: !Ref StayDayAllowance
+        ROUNDING_MODE: !Ref RoundingMode
+        DATE_ORDER: !Ref DateOrder
+        RETENTION_DAYS: !Ref RetentionDays
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
+        USE_BEDROCK: 'true'
+
+Resources:
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: [!Ref AllowedOrigin]
+        AllowHeaders: [authorization, content-type, idempotency-key]
+        AllowMethods: [GET, POST, PATCH, OPTIONS]
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            JwtConfiguration:
+              issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+              audience: [!Ref UserPoolClient]
+            IdentitySource: $request.header.Authorization
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: claimlens.api.handler
+      Environment:
+        Variables:
+          STATE_MACHINE_ARN: !Ref AnalysisStateMachine
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref RecordsTable }
+        - S3ReadPolicy: { BucketName: !Ref DocumentsBucket }
+        - S3WritePolicy: { BucketName: !Ref DocumentsBucket }
+        - Statement:
+            - Effect: Allow
+              Action: states:StartExecution
+              Resource: !Ref AnalysisStateMachine
+      Events:
+        CreateClaim: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: /claims, Method: POST } }
+        GetClaim: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/claims/{claimId}', Method: GET } }
+        UploadRequest: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/claims/{claimId}/documents/upload-request', Method: POST } }
+        GetDocument: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/claims/{claimId}/documents/{documentId}', Method: GET } }
+        StartAnalysis: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: /analyses, Method: POST } }
+        ListAnalyses: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: /analyses, Method: GET } }
+        GetAnalysis: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/analyses/{analysisId}', Method: GET } }
+        UpdateFinding: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/analyses/{analysisId}/findings/{findingId}', Method: PATCH } }
+        CorrectExtraction: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/analyses/{analysisId}/corrections', Method: PATCH } }
+        GetReport: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/analyses/{analysisId}/report', Method: GET } }
+
+  StartExtractionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: claimlens.workflow.start_extraction_handler
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref RecordsTable }
+        - S3ReadPolicy: { BucketName: !Ref DocumentsBucket }
+        - Statement:
+            - Effect: Allow
+              Action: textract:StartDocumentAnalysis
+              Resource: '*'
+
+  PollExtractionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: claimlens.workflow.poll_extraction_handler
+      Timeout: 120
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref RecordsTable }
+        - S3ReadPolicy: { BucketName: !Ref DocumentsBucket }
+        - S3WritePolicy: { BucketName: !Ref DocumentsBucket }
+        - Statement:
+            - Effect: Allow
+              Action: textract:GetDocumentAnalysis
+              Resource: '*'
+
+  AnalyzeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: claimlens.workflow.analyze_handler
+      Timeout: 120
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref RecordsTable }
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource: !Sub arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/${BedrockModelId}
+
+  MarkFailedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: claimlens.workflow.mark_failed_handler
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref RecordsTable }
+
+  AnalysisStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      DefinitionSubstitutions:
+        StartExtractionArn: !GetAtt StartExtractionFunction.Arn
+        PollExtractionArn: !GetAtt PollExtractionFunction.Arn
+        AnalyzeArn: !GetAtt AnalyzeFunction.Arn
+        MarkFailedArn: !GetAtt MarkFailedFunction.Arn
+      Definition:
+        Comment: Idempotent asynchronous extraction and source-grounded analysis
+        TimeoutSeconds: 3600
+        StartAt: ExtractDocuments
+        States:
+          ExtractDocuments:
+            Type: Map
+            ItemsPath: $.documents
+            MaxConcurrency: 3
+            ItemSelector:
+              tenantId.$: $.tenantId
+              claimId.$: $.claimId
+              analysisId.$: $.analysisId
+              documentId.$: $$.Map.Item.Value.documentId
+              documentType.$: $$.Map.Item.Value.documentType
+              version.$: $$.Map.Item.Value.version
+              objectKey.$: $$.Map.Item.Value.objectKey
+            ItemProcessor:
+              ProcessorConfig: { Mode: INLINE }
+              StartAt: StartExtraction
+              States:
+                StartExtraction:
+                  Type: Task
+                  Resource: arn:aws:states:::lambda:invoke
+                  Parameters: { FunctionName: '${StartExtractionArn}', Payload.$: $ }
+                  OutputPath: $.Payload
+                  Retry:
+                    - ErrorEquals: [Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.TooManyRequestsException]
+                      IntervalSeconds: 2
+                      MaxAttempts: 3
+                      BackoffRate: 2
+                  Next: WaitForTextract
+                WaitForTextract: { Type: Wait, Seconds: 5, Next: PollExtraction }
+                PollExtraction:
+                  Type: Task
+                  Resource: arn:aws:states:::lambda:invoke
+                  Parameters: { FunctionName: '${PollExtractionArn}', Payload.$: $ }
+                  OutputPath: $.Payload
+                  Retry:
+                    - ErrorEquals: [Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.TooManyRequestsException]
+                      IntervalSeconds: 2
+                      MaxAttempts: 3
+                      BackoffRate: 2
+                  Next: ExtractionStatus
+                ExtractionStatus:
+                  Type: Choice
+                  Choices:
+                    - Variable: $.jobStatus
+                      StringEquals: IN_PROGRESS
+                      Next: WaitForTextract
+                  Default: ExtractionDone
+                ExtractionDone: { Type: Succeed }
+            ResultPath: $.extractionResults
+            Next: Analyze
+            Catch:
+              - ErrorEquals: [States.ALL]
+                ResultPath: $.workflowError
+                Next: MarkFailed
+          Analyze:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters: { FunctionName: '${AnalyzeArn}', Payload.$: $ }
+            OutputPath: $.Payload
+            Retry:
+              - ErrorEquals: [Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.TooManyRequestsException]
+                IntervalSeconds: 2
+                MaxAttempts: 3
+                BackoffRate: 2
+            End: true
+            Catch:
+              - ErrorEquals: [States.ALL]
+                ResultPath: $.workflowError
+                Next: MarkFailed
+          MarkFailed:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters: { FunctionName: '${MarkFailedArn}', Payload.$: $ }
+            End: true
+      Policies:
+        - LambdaInvokePolicy: { FunctionName: !Ref StartExtractionFunction }
+        - LambdaInvokePolicy: { FunctionName: !Ref PollExtractionFunction }
+        - LambdaInvokePolicy: { FunctionName: !Ref AnalyzeFunction }
+        - LambdaInvokePolicy: { FunctionName: !Ref MarkFailedFunction }
+      Tracing: { Enabled: true }
+
+  RecordsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: pk, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: pk, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      SSESpecification: { SSEEnabled: true }
+      TimeToLiveSpecification: { AttributeName: expiresAt, Enabled: true }
+
+  ApiFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${ApiFunction}'
+      RetentionInDays: !Ref LogRetentionDays
+
+  StartExtractionFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${StartExtractionFunction}'
+      RetentionInDays: !Ref LogRetentionDays
+
+  PollExtractionFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${PollExtractionFunction}'
+      RetentionInDays: !Ref LogRetentionDays
+
+  AnalyzeFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AnalyzeFunction}'
+      RetentionInDays: !Ref LogRetentionDays
+
+  MarkFailedFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${MarkFailedFunction}'
+      RetentionInDays: !Ref LogRetentionDays
+
+  DocumentsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      VersioningConfiguration: { Status: Enabled }
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: [!Ref AllowedOrigin]
+            AllowedMethods: [POST, GET, HEAD]
+            AllowedHeaders: ['*']
+            ExposedHeaders: [ETag, Content-Length, Content-Range, Accept-Ranges]
+            MaxAge: 900
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireClaimData
+            Status: Enabled
+            ExpirationInDays: !Ref RetentionDays
+            NoncurrentVersionExpiration: { NoncurrentDays: !Ref RetentionDays }
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 1 }
+
+  DocumentsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DocumentsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource: [!Sub '${DocumentsBucket.Arn}', !Sub '${DocumentsBucket.Arn}/*']
+            Condition: { Bool: { 'aws:SecureTransport': 'false' } }
+
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: claimlens-reviewers
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Schema:
+        - Name: tenant_id
+          AttributeDataType: String
+          Mutable: false
+          Required: false
+      Policies:
+        PasswordPolicy: { MinimumLength: 12, RequireLowercase: true, RequireNumbers: true, RequireSymbols: true, RequireUppercase: true }
+      UserPoolAddOns: { AdvancedSecurityMode: ENFORCED }
+      DeletionProtection: ACTIVE
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [code]
+      AllowedOAuthScopes: [openid, email, profile]
+      CallbackURLs: [!Ref CognitoCallbackUrl]
+      LogoutURLs: [!Ref CognitoLogoutUrl]
+      SupportedIdentityProviders: [COGNITO]
+      EnableTokenRevocation: true
+      ReadAttributes: [email, name, 'custom:tenant_id']
+      WriteAttributes: [email, name]
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: !Ref UserPool
+      Domain: !Sub 'claimlens-${AWS::AccountId}-${AWS::Region}'
+
+Outputs:
+  ApiUrl: { Value: !Sub 'https://${Api}.execute-api.${AWS::Region}.${AWS::URLSuffix}' }
+  UserPoolId: { Value: !Ref UserPool }
+  UserPoolClientId: { Value: !Ref UserPoolClient }
+  CognitoDomain: { Value: !Sub 'https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com' }
+  DocumentsBucketName: { Value: !Ref DocumentsBucket }
+  AnalysisStateMachineArn: { Value: !Ref AnalysisStateMachine }

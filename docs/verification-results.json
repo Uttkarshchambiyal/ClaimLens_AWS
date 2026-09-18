@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-09-18T09:40:00.745597+00:00",
+  "scope": "Local tests, static validation, and mock browser acceptance only; no deployment or live cloud verification.",
+  "checks": [
+    {
+      "check": "dependency_check",
+      "status": "PASS",
+      "output": "No broken requirements found.\n"
+    },
+    {
+      "check": "backend_compile",
+      "status": "PASS",
+      "output": ""
+    },
+    {
+      "check": "backend_tests",
+      "status": "PASS",
+      "output": "...........................................................              [100%]\n59 passed in 0.97s\n"
+    },
+    {
+      "check": "sam_lint",
+      "status": "PASS",
+      "output": ""
+    },
+    {
+      "check": "verifier_syntax",
+      "status": "PASS",
+      "output": ""
+    },
+    {
+      "check": "frontend_tests",
+      "status": "PASS",
+      "output": "\n> claimlens-frontend@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.1 /Volumes/MY_HUB/AWS HACKATHONE/frontend\n\n\n Test Files  3 passed (3)\n      Tests  14 passed (14)\n   Start at  15:09:51\n   Duration  1.91s (environment 40%, tests 37%, transform 9%, setup 8%, import 6%)\n\n"
+    },
+    {
+      "check": "production_build",
+      "status": "PASS",
+      "output": "\n> claimlens-frontend@0.1.0 build\n> tsc -p tsconfig.app.json --noEmit && vite build\n\nvite v8.3.0 building client environment for production...\ntransforming...\n\u2713 1897 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                              0.57 kB \u2502 gzip:   0.34 kB\ndist/assets/pdf.worker.min-Dswkl-cV.mjs  1,265.41 kB\ndist/assets/App-DRfi2_8a.css                33.74 kB \u2502 gzip:   7.05 kB\ndist/assets/index-Dv7e11J8.css              35.12 kB \u2502 gzip:   6.83 kB\ndist/assets/App-kY6xnRj1.js                 49.48 kB \u2502 gzip:  14.71 kB\ndist/assets/index-DrdC7OZw.js              270.16 kB \u2502 gzip:  84.66 kB\ndist/assets/pdf-CCQRumy4.js                430.93 kB \u2502 gzip: 129.03 kB\n\n\u2713 built in 389ms\n"
+    },
+    {
+      "check": "formatting",
+      "status": "PASS",
+      "output": "\n> claimlens-frontend@0.1.0 format:check\n> prettier --check src vite.config.ts vitest.config.ts\n\nChecking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "check": "browser_smoke",
+      "status": "PASS",
+      "output": "browser_smoke: PASS (desktop and mobile mock workflows)\n"
+    }
+  ],
+  "awsCliAvailable": false,
+  "samCliAvailable": false,
+  "liveAwsVerified": false,
+  "browserSmokeVerified": true,
+  "browserVisualVerified": true,
+  "readiness": "LOCAL_CHECKS_PASS_CLOUD_GATE_PENDING"
+}

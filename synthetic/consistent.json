@@ -1,0 +1,18 @@
+{
+  "packetId": "synthetic-consistent-001",
+  "description": "Fictional packet whose arithmetic, patient identifier, and dates agree.",
+  "documentTypes": ["BILL", "DISCHARGE_SUMMARY", "SUPPORTING_REPORT"],
+  "fields": [
+    {"name":"line_item_amount","value":"1000.00","normalizedValue":100000,"documentId":"bill","blockId":"b1"},
+    {"name":"line_item_amount","value":"500.00","normalizedValue":50000,"documentId":"bill","blockId":"b2"},
+    {"name":"invoice_total","value":"1500.00","normalizedValue":150000,"documentId":"bill","blockId":"b3"},
+    {"name":"invoice_number","value":"INV-C-1","normalizedValue":"INV-C-1","documentId":"bill","blockId":"b4"},
+    {"name":"provider_identifier","value":"HOSP-01","normalizedValue":"HOSP-01","documentId":"bill","blockId":"b5"},
+    {"name":"patient_identifier","value":"MEM-101","normalizedValue":"MEM-101","documentId":"bill","blockId":"b6"},
+    {"name":"patient_identifier","value":"MEM-101","normalizedValue":"MEM-101","documentId":"summary","blockId":"s1"},
+    {"name":"admission_date","value":"10/09/2026","normalizedValue":"2026-09-10","documentId":"summary","blockId":"s2"},
+    {"name":"discharge_date","value":"12/09/2026","normalizedValue":"2026-09-12","documentId":"summary","blockId":"s3"},
+    {"name":"procedure_date","value":"11/09/2026","normalizedValue":"2026-09-11","documentId":"report","blockId":"r1"}
+  ],
+  "expected": {"bill.total_reconciliation":"PASS","packet.patient_identity":"PASS","packet.timeline":"PASS"}
+}

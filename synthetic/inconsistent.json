@@ -1,0 +1,15 @@
+{
+  "packetId": "synthetic-inconsistent-001",
+  "description": "Fictional packet with a total mismatch, patient mismatch, and procedure outside the stay.",
+  "documentTypes": ["BILL", "DISCHARGE_SUMMARY", "SUPPORTING_REPORT"],
+  "fields": [
+    {"name":"line_item_amount","value":"1000.00","normalizedValue":100000,"documentId":"bill","blockId":"b1"},
+    {"name":"invoice_total","value":"1250.00","normalizedValue":125000,"documentId":"bill","blockId":"b2"},
+    {"name":"patient_identifier","value":"MEM-101","normalizedValue":"MEM-101","documentId":"bill","blockId":"b3"},
+    {"name":"patient_identifier","value":"MEM-909","normalizedValue":"MEM-909","documentId":"summary","blockId":"s1"},
+    {"name":"admission_date","value":"10/09/2026","normalizedValue":"2026-09-10","documentId":"summary","blockId":"s2"},
+    {"name":"discharge_date","value":"12/09/2026","normalizedValue":"2026-09-12","documentId":"summary","blockId":"s3"},
+    {"name":"procedure_date","value":"05/09/2026","normalizedValue":"2026-09-05","documentId":"report","blockId":"r1"}
+  ],
+  "expected": {"bill.total_reconciliation":"FINDING","packet.patient_identity":"FINDING","packet.timeline":"FINDING"}
+}

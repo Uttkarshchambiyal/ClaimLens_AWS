@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.vite/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+.aws-sam/
+.env
+.DS_Store
+coverage/
+.venv/
+frontend/.env.local
+frontend/vite.config.js
+frontend/vite.config.d.ts
+tmp/pdfs/
+tmp/browser-qa/

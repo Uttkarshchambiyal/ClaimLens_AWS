@@ -1,0 +1,10 @@
+{
+  "packetId": "synthetic-ambiguous-001",
+  "description": "Fictional packet with a comma that could represent a decimal separator.",
+  "documentTypes": ["BILL"],
+  "fields": [
+    {"name":"line_item_amount","value":"12,50","normalizedValue":null,"normalizationStatus":"AMBIGUOUS","documentId":"bill","blockId":"b1"},
+    {"name":"invoice_total","value":"12.50","normalizedValue":1250,"documentId":"bill","blockId":"b2"}
+  ],
+  "expected": {"bill.total_reconciliation":"INSUFFICIENT_EVIDENCE","packet.patient_identity":"INSUFFICIENT_EVIDENCE","packet.timeline":"INSUFFICIENT_EVIDENCE"}
+}
