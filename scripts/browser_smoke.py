@@ -72,6 +72,19 @@ def _desktop_flow(page: Page, base_url: str, artifacts: Path | None) -> None:
     _assert_page_basics(page)
     _screenshot(page, artifacts, "desktop-landing.png")
 
+    page.goto(base_url + "/auth/login", wait_until="networkidle")
+    page.get_by_role("heading", name="Log in").wait_for()
+    page.get_by_role("link", name="Create account").wait_for()
+    _assert_page_basics(page)
+    _screenshot(page, artifacts, "desktop-login.png")
+
+    page.goto(base_url + "/auth/signup", wait_until="networkidle")
+    page.get_by_role("heading", name="Create your account").wait_for()
+    page.get_by_role("link", name="Log in").wait_for()
+    _assert_page_basics(page)
+    _screenshot(page, artifacts, "desktop-signup.png")
+
+    page.goto(base_url, wait_until="networkidle")
     page.get_by_role("link", name="Open sample workspace").click()
     page.wait_for_url("**/review")
     page.get_by_role("heading", name="Invoice total does not reconcile").wait_for()
@@ -101,6 +114,11 @@ def _mobile_flow(page: Page, base_url: str, artifacts: Path | None) -> None:
     page.get_by_role("heading", name=re.compile(r"Every claim.*Clear evidence.*Confident review")).wait_for()
     _assert_page_basics(page)
     _screenshot(page, artifacts, "mobile-landing.png")
+
+    page.goto(base_url + "/auth/signup", wait_until="networkidle")
+    page.get_by_role("heading", name="Create your account").wait_for()
+    _assert_page_basics(page)
+    _screenshot(page, artifacts, "mobile-signup.png")
 
     page.goto(base_url + "/review", wait_until="networkidle")
     page.get_by_role("heading", name="Invoice total does not reconcile").wait_for()

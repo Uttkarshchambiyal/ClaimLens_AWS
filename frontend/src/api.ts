@@ -1,10 +1,9 @@
 import { demoCorrect, demoGet, demoList, demoUpdate, demoUpload } from './demoStore'
+import { appMode, isValidAppMode } from './appConfig'
+import { requireUser } from './auth'
 import type { Analysis, Finding, UploadFile, UploadProgress } from './types'
 
-export type AppMode = 'mock' | 'production'
-const configuredMode =
-  import.meta.env.VITE_APP_MODE || (import.meta.env.DEV ? 'mock' : 'production')
-export const appMode: AppMode = configuredMode === 'mock' ? 'mock' : 'production'
+export { appMode } from './appConfig'
 const apiBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
 
 async function request<T>(
@@ -14,14 +13,13 @@ async function request<T>(
   body?: unknown,
   key?: string,
 ): Promise<T> {
-  if (!['mock', 'production'].includes(configuredMode))
+  if (!isValidAppMode)
     throw new Error('Invalid application mode. Set VITE_APP_MODE to mock or production.')
   if (!apiBase)
     throw new Error(
       'AWS API is not configured. Set VITE_API_BASE_URL and Cognito settings, or explicitly select mock mode.',
     )
   // Obtain the current ID token after silent renewal, not a stale render snapshot.
-  const { requireUser } = await import('./auth')
   token = (await requireUser())?.id_token || token
   if (!token) throw new Error('Your session has expired. Sign in again to continue.')
   const response = await fetch(apiBase + path, {

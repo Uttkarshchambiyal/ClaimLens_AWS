@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-19T10:24:50.898973+00:00",
+  "checkedAt": "2026-09-19T10:45:18.235374+00:00",
   "scope": "Local tests, static validation, and mock browser acceptance only; no deployment or live cloud verification.",
   "checks": [
     {
@@ -15,7 +15,7 @@
     {
       "check": "backend_tests",
       "status": "PASS",
-      "output": ".................................................................        [100%]\n65 passed in 0.95s\n"
+      "output": "....................................................................     [100%]\n68 passed in 1.73s\n"
     },
     {
       "check": "quality_benchmark",
@@ -25,7 +25,7 @@
     {
       "check": "large_packet_benchmark",
       "status": "PASS",
-      "output": "{\n  \"checkedAt\": \"2026-09-19T10:24:41.399541+00:00\",\n  \"scope\": \"Local maximum-shape benchmark only; does not measure AWS service latency or quotas.\",\n  \"documents\": 10,\n  \"fields\": 120,\n  \"serializedFieldBytes\": 53783,\n  \"configuredFieldLimit\": 120,\n  \"configuredCombinedByteLimit\": 220000,\n  \"elapsedMs\": 3.214,\n  \"analysisStatus\": \"COMPLETED_WITH_WARNINGS\",\n  \"withinBounds\": true\n}\n"
+      "output": "{\n  \"checkedAt\": \"2026-09-19T10:45:06.241652+00:00\",\n  \"scope\": \"Local maximum-shape benchmark only; does not measure AWS service latency or quotas.\",\n  \"documents\": 10,\n  \"fields\": 120,\n  \"serializedFieldBytes\": 53783,\n  \"configuredFieldLimit\": 120,\n  \"configuredCombinedByteLimit\": 220000,\n  \"elapsedMs\": 3.247,\n  \"analysisStatus\": \"COMPLETED_WITH_WARNINGS\",\n  \"withinBounds\": true\n}\n"
     },
     {
       "check": "evaluation_artifact",
@@ -45,12 +45,12 @@
     {
       "check": "frontend_tests",
       "status": "PASS",
-      "output": "\n> claimlens-frontend@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.1 /Volumes/MY_HUB/AWS HACKATHONE/frontend\n\n\n Test Files  3 passed (3)\n      Tests  14 passed (14)\n   Start at  15:54:42\n   Duration  1.79s (environment 40%, tests 37%, setup 8%, transform 8%, import 6%)\n\n"
+      "output": "\n> claimlens-frontend@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.1 /Volumes/MY_HUB/AWS HACKATHONE/frontend\n\n\n Test Files  4 passed (4)\n      Tests  16 passed (16)\n   Start at  16:15:07\n   Duration  2.02s (environment 38%, tests 31%, import 16%, setup 8%, transform 8%)\n\n"
     },
     {
       "check": "production_build",
       "status": "PASS",
-      "output": "\n> claimlens-frontend@0.1.0 build\n> tsc -p tsconfig.app.json --noEmit && vite build\n\nvite v8.3.0 building client environment for production...\ntransforming...\n\u2713 1900 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                              0.57 kB \u2502 gzip:   0.35 kB\ndist/assets/pdf.worker.min-Dswkl-cV.mjs  1,265.41 kB\ndist/assets/index-nRyAyvxV.css              25.15 kB \u2502 gzip:   6.43 kB\ndist/assets/App-B3RflhCR.css                44.78 kB \u2502 gzip:   9.09 kB\ndist/assets/auth-BGWPH3u6.js                 0.06 kB \u2502 gzip:   0.07 kB\ndist/assets/App-_El0GT3S.js                113.30 kB \u2502 gzip:  30.29 kB\ndist/assets/index-CQsqZmp9.js              268.50 kB \u2502 gzip:  84.42 kB\ndist/assets/pdf-CQWtLAVW.js                430.93 kB \u2502 gzip: 129.03 kB\n\n\u2713 built in 367ms\n\u001b[33m[INEFFECTIVE_DYNAMIC_IMPORT] \u001b[0msrc/auth.ts is dynamically imported by src/api.ts but also statically imported by src/App.tsx, dynamic import will not move module into another chunk.\n\n"
+      "output": "\n> claimlens-frontend@0.1.0 build\n> tsc -p tsconfig.app.json --noEmit && vite build\n\nvite v8.3.0 building client environment for production...\ntransforming...\n\u2713 2492 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                              0.57 kB \u2502 gzip:   0.35 kB\ndist/assets/pdf.worker.min-Dswkl-cV.mjs  1,265.41 kB\ndist/assets/index-DM99UWK2.css              29.23 kB \u2502 gzip:   7.28 kB\ndist/assets/App-B3RflhCR.css                44.78 kB \u2502 gzip:   9.09 kB\ndist/assets/App-CEbqLZW7.js                 43.93 kB \u2502 gzip:  12.82 kB\ndist/assets/index-BmwBxpsS.js              398.86 kB \u2502 gzip: 121.67 kB\ndist/assets/pdf-BdlHNgK3.js                430.93 kB \u2502 gzip: 129.03 kB\n\n\u2713 built in 375ms\n"
     },
     {
       "check": "formatting",

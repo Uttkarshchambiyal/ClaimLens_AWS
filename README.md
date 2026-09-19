@@ -14,9 +14,9 @@ npm run dev
 
 - `/`: clean split-image Aero landing page, sample preview, and working workspace links.
 - `/review`: reviewer workspace, labeled **MOCK MODE** during local development.
-- `/auth/login`: starts the Cognito managed login flow.
-- `/auth/signup`: starts Cognito account creation and email verification.
-- `/auth/callback`: Cognito authorization-code callback in production.
+- `/auth/login`: first-party login form backed directly by Cognito.
+- `/auth/signup`: first-party account creation and email-code verification.
+- `/auth/callback`: legacy managed-login callback retained for deployment compatibility.
 
 The reviewer workspace includes inconsistent, consistent, ambiguous, and legitimate edge-case scenarios; the rule benchmark also includes an explicit-adjustments packet. Demo reviewer actions and correction annotations persist in this browser's session storage. Demo uploads do **not** perform OCR or fabricate findings; they record an explicit extraction-unavailable result. Use synthetic files only.
 
@@ -135,7 +135,7 @@ The [evaluation protocol](docs/evaluation.md) adds measurable rule precision/rec
 
 The [14-page project guide](output/pdf/claimlens-architecture-and-readiness.pdf) explains the website, AWS architecture, component responsibilities, evidence/record model, rules, model boundary, security, reliability, demo script, and live acceptance gate. Its editable source is [docs/claimlens-guide.md](docs/claimlens-guide.md).
 
-Current local results: **68 backend tests and 14 frontend tests pass**, along with the labeled quality benchmark, maximum-shape packet benchmark, eight-page evaluation-artifact validation, dependency consistency, Python compilation, production build, formatting, SAM lint, verifier syntax, and desktop/mobile Chromium acceptance. The eight evaluation pages and six application screenshots were visually inspected. Current npm and all three Python requirement audits report no known vulnerabilities. AWS hosting, Cognito login, and a protected API read are verified; live signup acceptance, Textract/Bedrock processing, and production signed-source verification remain outstanding. This is a synthetic hackathon prototype, not a certified production-ready medical system. Event-specific eligibility cannot be confirmed without the hackathon rules.
+Current local results: **68 backend tests and 16 frontend tests pass**, along with the labeled quality benchmark, maximum-shape packet benchmark, eight-page evaluation-artifact validation, dependency consistency, Python compilation, production build, formatting, SAM lint, verifier syntax, and desktop/mobile Chromium acceptance. The eight evaluation pages and nine application screenshots were visually inspected. Current npm and all three Python requirement audits report no known vulnerabilities. AWS hosting, Cognito login, and a protected API read are verified; live self-registration acceptance, Textract/Bedrock processing, and production signed-source verification remain outstanding. This is a synthetic hackathon prototype, not a certified production-ready medical system. Event-specific eligibility cannot be confirmed without the hackathon rules.
 
 ```bash
 .venv/bin/python scripts/verify_project.py
