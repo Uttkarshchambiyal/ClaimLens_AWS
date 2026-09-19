@@ -72,13 +72,13 @@ def _desktop_flow(page: Page, base_url: str, artifacts: Path | None) -> None:
     _assert_page_basics(page)
     _screenshot(page, artifacts, "desktop-landing.png")
 
-    page.goto(base_url + "/auth/login", wait_until="networkidle")
+    page.goto(base_url + "/auth/login/", wait_until="networkidle")
     page.get_by_role("heading", name="Log in").wait_for()
     page.get_by_role("link", name="Create account").wait_for()
     _assert_page_basics(page)
     _screenshot(page, artifacts, "desktop-login.png")
 
-    page.goto(base_url + "/auth/signup", wait_until="networkidle")
+    page.goto(base_url + "/auth/signup/", wait_until="networkidle")
     page.get_by_role("heading", name="Create your account").wait_for()
     page.get_by_role("link", name="Log in").wait_for()
     _assert_page_basics(page)
@@ -115,7 +115,7 @@ def _mobile_flow(page: Page, base_url: str, artifacts: Path | None) -> None:
     _assert_page_basics(page)
     _screenshot(page, artifacts, "mobile-landing.png")
 
-    page.goto(base_url + "/auth/signup", wait_until="networkidle")
+    page.goto(base_url + "/auth/signup/", wait_until="networkidle")
     page.get_by_role("heading", name="Create your account").wait_for()
     _assert_page_basics(page)
     _screenshot(page, artifacts, "mobile-signup.png")

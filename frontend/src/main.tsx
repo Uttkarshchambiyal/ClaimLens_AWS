@@ -6,15 +6,12 @@ import { ThemeProvider } from '@/components/ui/theme-provider'
 import './hero.css'
 
 const ReviewApp = lazy(() => import('./App').then((module) => ({ default: module.App })))
+const routePath = window.location.pathname.replace(/\/+$/, '') || '/'
 const authMode =
-  window.location.pathname === '/auth/signup'
-    ? 'signup'
-    : window.location.pathname === '/auth/login'
-      ? 'login'
-      : null
+  routePath === '/auth/signup' ? 'signup' : routePath === '/auth/login' ? 'login' : null
 const isReview =
-  /^\/review\/?$/.test(window.location.pathname) ||
-  window.location.pathname === '/auth/callback' ||
+  routePath === '/review' ||
+  routePath === '/auth/callback' ||
   new URLSearchParams(window.location.search).has('analysis')
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
