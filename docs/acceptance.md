@@ -13,7 +13,7 @@
 | Inconsistent packet | synthetic `inconsistent.json` plus mismatch tests | Pending |
 | Ambiguous packet | synthetic `ambiguous.json` plus normalization tests | Pending |
 | Legitimate edge case | synthetic `legitimate-edge.json` | Pending |
-| Reviewer attribution and audit history | authenticated subject plus append-only `REVIEW_EVENT` integration test | Cognito identity pending |
+| Reviewer attribution and audit history | authenticated subject plus append-only `REVIEW_EVENT` integration test | Cognito subject verified for protected API access; live mutation pending |
 | Retention controls | repository expiry tests plus SAM lint | Deployed lifecycle/TTL observation pending |
 | Responsive browser workflow | Playwright desktop/mobile navigation, mutation, evidence and dialog flow | Amplify host and desktop Cognito flow verified; production mobile flow pending |
 | Rule precision/recall | `scripts/evaluate_quality.py`; zero false-clean gate | Re-run against expanded labeled corpus |
@@ -23,7 +23,7 @@
 
 ## Current local results
 
-- 65 Python tests pass, including Moto-emulated S3/DynamoDB integration, expanded extraction/quality tests and stubbed worker tests. These check version pinning, duplicate analysis requests, reviewer attribution/audit events, retention timestamps, report content, cross-tenant denial, Textract pagination/retries, partial extraction, low-confidence gating, repeated headers, explicit adjustments, Hindi labels, numeric-date ambiguity, malformed money, missing geometry, bounded prose and snapshot recovery. They do not call live Textract or Bedrock.
+- 68 Python tests pass, including Moto-emulated S3/DynamoDB integration, Cognito tenant-claim generation, expanded extraction/quality tests and stubbed worker tests. These check version pinning, duplicate analysis requests, reviewer attribution/audit events, retention timestamps, report content, cross-tenant denial, Textract pagination/retries, partial extraction, low-confidence gating, repeated headers, explicit adjustments, Hindi labels, numeric-date ambiguity, malformed money, missing geometry, bounded prose and snapshot recovery. They do not call live Textract or Bedrock.
 - 14 React interaction tests pass, including hero navigation/sample preview, animation pause, reviewer filters, queue selection, URL restoration, keyboard tabs, document-to-evidence navigation, corrections and save-error retry, dispositions, mock upload validation/idempotency, the upload dialog, and report-download initiation. These use jsdom, not a real browser.
 - TypeScript compilation, Vite production build, frontend formatting, CloudFormation/SAM lint (`cfn-lint`), and verifier shell syntax pass.
 - Playwright exercises the current mock landing, queue, claim review, disposition mutation, audit activity, evidence viewer, and upload dialog in Chromium at 1536x960 and 390x844. It also checks page errors, console errors, duplicate DOM IDs, image alt text, and viewport-level overflow. Six current screenshots were manually inspected. Production Cognito login and a protected API read are verified; token refresh/logout, cross-tenant denial, and signed-source rendering remain unverified.
@@ -36,7 +36,7 @@ The verifier performs identity/region checks, a Textract GetDocumentAnalysis rea
 
 The current reproducible report is `docs/verification-results.json`. Run `.venv/bin/python scripts/verify_project.py` to refresh all local gates. The 14-page project guide is `output/pdf/claimlens-architecture-and-readiness.pdf`; all rendered pages were inspected for layout. The supplied GitHub Actions workflow has not yet run on GitHub.
 
-- Provision a second tenant-assigned Cognito reviewer and verify refresh, logout, and cross-tenant HTTP denial. One tenant's hosted login and protected queue request are verified.
+- Complete a fresh self-service registration with email verification, then verify refresh, logout, and cross-tenant HTTP denial. One administrator-provisioned tenant's hosted login and protected queue request are verified.
 - Exercise presigned S3 upload/read, version pinning, Textract pagination/partial failures, Step Functions retries, and strict Bedrock output handling in the chosen AWS region.
 - Verify source overlays against original synthetic PDF/image pages through deployed signed S3 URLs, plus Cognito flows and keyboard-only acceptance on the production host.
 - Run `scripts/evaluate_live_aws.py` on the included synthetic OCR corpus and record field precision/recall for clear, repeated-header, adjustment, multilingual, rotated, blurred and handwritten-style pages.

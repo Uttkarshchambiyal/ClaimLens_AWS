@@ -72,7 +72,7 @@ def _desktop_flow(page: Page, base_url: str, artifacts: Path | None) -> None:
     _assert_page_basics(page)
     _screenshot(page, artifacts, "desktop-landing.png")
 
-    page.get_by_role("link", name="Start reviewing").click()
+    page.get_by_role("link", name="Open sample workspace").click()
     page.wait_for_url("**/review")
     page.get_by_role("heading", name="Invoice total does not reconcile").wait_for()
     page.get_by_role("button", name="Review queue").click()

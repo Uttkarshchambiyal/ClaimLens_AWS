@@ -90,6 +90,16 @@
 .aero-header nav > a {
   border-bottom: 1px solid currentColor;
 }
+.aero-header nav > .aero-signup-link {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 18px;
+  border: 1px solid var(--aero-ink);
+  border-radius: 999px;
+  color: var(--aero-lime);
+  background: var(--aero-ink);
+}
 .aero-theme-toggle {
   border-color: #1220231f;
   color: var(--aero-ink);
@@ -256,6 +266,7 @@
 .aero-dialog-cta:hover .aero-action-icon {
   transform: rotate(45deg);
 }
+.aero-login-action,
 .aero-secondary-link {
   display: inline-flex;
   align-items: center;
@@ -268,6 +279,9 @@
   background: transparent;
   font-size: 0.875rem;
   font-weight: 600;
+}
+.aero-login-action {
+  text-decoration: none;
 }
 .aero-trust-row {
   display: flex;
@@ -798,19 +812,15 @@
   }
 }
 @media (max-width: 560px) {
-  .aero-header nav > .aero-workspace-link {
-    width: 42px;
-    height: 42px;
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    border: 1px solid #1220231f;
-    border-radius: 50%;
-    font-size: 0;
+  .aero-header nav {
+    gap: 10px;
   }
-  .aero-header nav > .aero-workspace-link::after {
-    content: '↗';
-    font-size: 1rem;
+  .aero-header nav > .aero-login-link {
+    display: none;
+  }
+  .aero-header nav > .aero-signup-link {
+    min-height: 40px;
+    padding-inline: 14px;
   }
   .aero-image-panel {
     min-height: 285px;

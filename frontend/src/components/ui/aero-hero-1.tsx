@@ -31,6 +31,8 @@ const SERVICES = [
 
 export interface HeroSectionProps {
   reviewHref?: string
+  loginHref?: string
+  signupHref?: string
   className?: string
 }
 
@@ -93,7 +95,12 @@ function SamplePreview({ reviewHref, close }: { reviewHref: string; close: () =>
   )
 }
 
-export default function HeroSection({ reviewHref = '/review', className }: HeroSectionProps) {
+export default function HeroSection({
+  reviewHref = '/review',
+  loginHref = '/auth/login',
+  signupHref = '/auth/signup',
+  className,
+}: HeroSectionProps) {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [paused, setPaused] = useState(false)
   return (
@@ -109,8 +116,11 @@ export default function HeroSection({ reviewHref = '/review', className }: HeroS
           <a className="aero-how-link" href="#how-it-works">
             How it works
           </a>
-          <a className="aero-workspace-link" href={reviewHref}>
-            Open workspace
+          <a className="aero-login-link" href={loginHref}>
+            Log in
+          </a>
+          <a className="aero-signup-link" href={signupHref}>
+            Create account
           </a>
           <ThemeToggle className="aero-theme-toggle" />
         </nav>
@@ -151,8 +161,11 @@ export default function HeroSection({ reviewHref = '/review', className }: HeroS
               the exact source, and keep every decision in human hands.
             </p>
             <div className="aero-actions">
-              <a href={reviewHref} className="aero-primary-link">
-                <ArrowAction>Start reviewing</ArrowAction>
+              <a href={signupHref} className="aero-primary-link">
+                <ArrowAction>Create your account</ArrowAction>
+              </a>
+              <a href={loginHref} className="aero-login-action">
+                <LockKeyhole size={15} /> Log in
               </a>
               <button className="aero-secondary-link" onClick={() => setPreviewOpen(true)}>
                 <Play size={15} /> Explore a sample

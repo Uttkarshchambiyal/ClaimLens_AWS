@@ -387,12 +387,17 @@ Resources:
 
   UserPool:
     Type: AWS::Cognito::UserPool
+    DependsOn: IdentityClaimsPermission
     Properties:
       UserPoolName: claimlens-reviewers
       AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: true
+        AllowAdminCreateUserOnly: false
       UsernameAttributes: [email]
       AutoVerifiedAttributes: [email]
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
       Schema:
         - Name: tenant_id
           AttributeDataType: String
@@ -402,6 +407,23 @@ Resources:
         PasswordPolicy: { MinimumLength: 12, RequireLowercase: true, RequireNumbers: true, RequireSymbols: true, RequireUppercase: true }
       UserPoolAddOns: { AdvancedSecurityMode: ENFORCED }
       DeletionProtection: ACTIVE
+      LambdaConfig:
+        PreTokenGeneration: !GetAtt IdentityClaimsFunction.Arn
+
+  IdentityClaimsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: claimlens.auth.pre_token_generation_handler
+      Description: Preserves assigned tenants and gives self-service users an isolated tenant claim
+
+  IdentityClaimsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref IdentityClaimsFunction
+      Principal: cognito-idp.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient

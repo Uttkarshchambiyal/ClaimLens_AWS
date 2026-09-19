@@ -4,12 +4,17 @@ import { describe, expect, it } from 'vitest'
 import HeroSection from './glassmorphism-trust-hero'
 
 describe('ClaimLens opening hero', () => {
-  it('routes calls to action to the reviewer workspace and labels sample metrics', () => {
+  it('keeps the landing page public and offers explicit account actions', () => {
     render(<HeroSection reviewHref="/review?analysis=sample" />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Every claim.')
-    expect(screen.getByRole('link', { name: 'Start reviewing' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Create your account' })).toHaveAttribute(
       'href',
-      '/review?analysis=sample',
+      '/auth/signup',
+    )
+    expect(screen.getAllByRole('link', { name: 'Log in' })).toHaveLength(2)
+    expect(screen.getByRole('link', { name: 'Create account' })).toHaveAttribute(
+      'href',
+      '/auth/signup',
     )
     expect(screen.getByText('Synthetic data')).toBeVisible()
     expect(screen.getByRole('meter', { name: 'Sample extraction quality' })).toHaveAttribute(

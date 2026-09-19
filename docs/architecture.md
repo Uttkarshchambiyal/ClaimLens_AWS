@@ -2,7 +2,7 @@
 
 ## Request flow
 
-1. Cognito issues a reviewer ID token containing an administrator-assigned, immutable `custom:tenant_id`.
+1. Cognito stores user credentials and issues a reviewer ID token. The pre-token hook preserves an administrator-assigned `custom:tenant_id`; for a verified self-service account it derives a private tenant from the immutable Cognito subject.
 2. API Gateway validates the token. The API Lambda derives tenancy only from the validated claim, never from the request body.
 3. The UI creates a claim, requests a short-lived presigned POST per document, uploads directly to a private versioned S3 bucket under an S3-enforced content-type/encryption/size policy, and starts an analysis with an idempotency key.
 4. Step Functions Standard returns control immediately and processes documents asynchronously. Each document worker reuses a recorded Textract job ID on retry.

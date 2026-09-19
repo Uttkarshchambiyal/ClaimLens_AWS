@@ -14,7 +14,9 @@ npm run dev
 
 - `/`: clean split-image Aero landing page, sample preview, and working workspace links.
 - `/review`: reviewer workspace, labeled **MOCK MODE** during local development.
-- `/auth/callback`: Cognito sign-in callback in production.
+- `/auth/login`: starts the Cognito managed login flow.
+- `/auth/signup`: starts Cognito account creation and email verification.
+- `/auth/callback`: Cognito authorization-code callback in production.
 
 The reviewer workspace includes inconsistent, consistent, ambiguous, and legitimate edge-case scenarios; the rule benchmark also includes an explicit-adjustments packet. Demo reviewer actions and correction annotations persist in this browser's session storage. Demo uploads do **not** perform OCR or fabricate findings; they record an explicit extraction-unavailable result. Use synthetic files only.
 
@@ -91,11 +93,11 @@ sam validate --lint
 sam deploy --guided --region <your-region>
 ```
 
-Set `BedrockModelId`, `RetentionDays`, `LogRetentionDays`, and `MinFieldConfidence` for the chosen environment. `AllowedOrigin`, `CognitoCallbackUrl`, and `CognitoLogoutUrl` automatically use the generated CloudFront URL when left blank. To use Amplify or another HTTPS host, deploy with `EnableCloudFront=false` and provide all three URL parameters. Verify the selected model's regional availability. Cognito users are administrator-provisioned with an immutable `custom:tenant_id`; the browser cannot assign itself a tenant. The API requires an API-Gateway-validated ID token containing that tenant claim.
+Set `BedrockModelId`, `RetentionDays`, `LogRetentionDays`, and `MinFieldConfidence` for the chosen environment. `AllowedOrigin`, `CognitoCallbackUrl`, and `CognitoLogoutUrl` automatically use the generated CloudFront URL when left blank. To use Amplify or another HTTPS host, deploy with `EnableCloudFront=false` and provide all three URL parameters. Verify the selected model's regional availability. Cognito stores credentials, verifies self-registered email addresses, and supports administrator-provisioned reviewers. A pre-token hook preserves an assigned `custom:tenant_id` or derives a private tenant from the immutable Cognito subject for a new self-service user. The browser cannot choose its tenant. The API requires an API-Gateway-validated ID token containing that tenant claim.
 
 Frontend variables are in `frontend/.env.example`. Set `VITE_APP_MODE=production` and the deployed API/Cognito values for AWS use. Builds default to production unless mock mode is explicitly selected. Production never silently falls back to fabricated findings. For a deliberately labeled static demo, use `npm run build:demo`.
 
-Configure the frontend host to serve `index.html` for `/review` and `/auth/callback`. Keep the configured callback host, scheme, and port consistent with Cognito.
+Configure the frontend host to serve `index.html` for `/review`, `/auth/login`, `/auth/signup`, and `/auth/callback`. Keep the configured callback host, scheme, and port consistent with Cognito.
 
 ## AWS verification status
 
@@ -133,7 +135,7 @@ The [evaluation protocol](docs/evaluation.md) adds measurable rule precision/rec
 
 The [14-page project guide](output/pdf/claimlens-architecture-and-readiness.pdf) explains the website, AWS architecture, component responsibilities, evidence/record model, rules, model boundary, security, reliability, demo script, and live acceptance gate. Its editable source is [docs/claimlens-guide.md](docs/claimlens-guide.md).
 
-Current local results: **65 backend tests and 14 frontend tests pass**, along with the labeled quality benchmark, maximum-shape packet benchmark, eight-page evaluation-artifact validation, dependency consistency, Python compilation, production build, formatting, SAM lint, verifier syntax, and desktop/mobile Chromium acceptance. The eight evaluation pages and six application screenshots were visually inspected. Current npm and all three Python requirement audits report no known vulnerabilities. AWS hosting, Cognito login, and a protected API read are verified; live Textract/Bedrock processing and production signed-source verification remain outstanding. This is a synthetic hackathon prototype, not a certified production-ready medical system. Event-specific eligibility cannot be confirmed without the hackathon rules.
+Current local results: **68 backend tests and 14 frontend tests pass**, along with the labeled quality benchmark, maximum-shape packet benchmark, eight-page evaluation-artifact validation, dependency consistency, Python compilation, production build, formatting, SAM lint, verifier syntax, and desktop/mobile Chromium acceptance. The eight evaluation pages and six application screenshots were visually inspected. Current npm and all three Python requirement audits report no known vulnerabilities. AWS hosting, Cognito login, and a protected API read are verified; live signup acceptance, Textract/Bedrock processing, and production signed-source verification remain outstanding. This is a synthetic hackathon prototype, not a certified production-ready medical system. Event-specific eligibility cannot be confirmed without the hackathon rules.
 
 ```bash
 .venv/bin/python scripts/verify_project.py

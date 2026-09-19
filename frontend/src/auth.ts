@@ -1,4 +1,4 @@
-import { UserManager, WebStorageStateStore, type User } from 'oidc-client-ts'
+import { OidcClient, UserManager, WebStorageStateStore, type User } from 'oidc-client-ts'
 import { appMode } from './api'
 
 let manager: UserManager | undefined
@@ -13,6 +13,7 @@ function getManager() {
     throw new Error(
       'Production Cognito OIDC configuration is incomplete. Mock fallback is disabled.',
     )
+  const sessionStore = new WebStorageStateStore({ store: window.sessionStorage })
   manager = new UserManager({
     authority,
     client_id: clientId,
@@ -20,7 +21,8 @@ function getManager() {
     post_logout_redirect_uri: import.meta.env.VITE_COGNITO_LOGOUT_URI,
     response_type: 'code',
     scope: 'openid email profile',
-    userStore: new WebStorageStateStore({ store: window.sessionStorage }),
+    userStore: sessionStore,
+    stateStore: sessionStore,
     automaticSilentRenew: true,
   })
   return manager
@@ -29,6 +31,17 @@ function getManager() {
 async function resolveUser(): Promise<User | null> {
   if (appMode === 'mock') return null
   const oidc = getManager()
+  if (window.location.pathname === '/auth/signup') {
+    const request = await new OidcClient(oidc.settings).createSigninRequest({})
+    const signupUrl = new URL(request.url)
+    signupUrl.pathname = '/signup'
+    window.location.assign(signupUrl.toString())
+    return null
+  }
+  if (window.location.pathname === '/auth/login') {
+    await oidc.signinRedirect()
+    return null
+  }
   if (window.location.pathname === '/auth/callback' && window.location.search) {
     const user = await oidc.signinRedirectCallback()
     window.history.replaceState({}, document.title, '/review')
