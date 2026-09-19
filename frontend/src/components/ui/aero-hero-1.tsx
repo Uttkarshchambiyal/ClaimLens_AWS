@@ -19,6 +19,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { appMode } from '@/appConfig'
+import { getOptionalUser, type ClaimLensUser } from '@/auth'
 
 const SERVICES = [
   { name: 'Amazon S3', icon: Layers3 },
@@ -45,6 +47,12 @@ function ArrowAction({ children }: { children: React.ReactNode }) {
       </span>
     </span>
   )
+}
+
+function firstName(user: ClaimLensUser) {
+  const value = String(user.profile.name || user.profile.email || 'Reviewer')
+  const first = value.split(/[@\s]/)[0].replace(/[._-]+/g, ' ')
+  return first.charAt(0).toUpperCase() + first.slice(1)
 }
 
 function SamplePreview({ reviewHref, close }: { reviewHref: string; close: () => void }) {
@@ -103,6 +111,25 @@ export default function HeroSection({
 }: HeroSectionProps) {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [paused, setPaused] = useState(false)
+  const [session, setSession] = useState<'loading' | 'guest' | 'signed-in'>(
+    appMode === 'mock' ? 'guest' : 'loading',
+  )
+  const [viewerName, setViewerName] = useState('Reviewer')
+  useEffect(() => {
+    let active = true
+    void getOptionalUser().then((user) => {
+      if (!active) return
+      if (user) {
+        setViewerName(firstName(user))
+        setSession('signed-in')
+      } else {
+        setSession('guest')
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [])
   return (
     <div className={cn('aero-hero', className)}>
       <header className="aero-header">
@@ -116,12 +143,22 @@ export default function HeroSection({
           <a className="aero-how-link" href="#how-it-works">
             How it works
           </a>
-          <a className="aero-login-link" href={loginHref}>
-            Log in
-          </a>
-          <a className="aero-signup-link" href={signupHref}>
-            Create account
-          </a>
+          {session === 'loading' ? (
+            <span className="aero-session-loading" aria-label="Checking account session" />
+          ) : session === 'signed-in' ? (
+            <a className="aero-welcome-link" href={reviewHref}>
+              Welcome, {viewerName}
+            </a>
+          ) : (
+            <>
+              <a className="aero-login-link" href={loginHref}>
+                Log in
+              </a>
+              <a className="aero-signup-link" href={signupHref}>
+                Create account
+              </a>
+            </>
+          )}
           <ThemeToggle className="aero-theme-toggle" />
         </nav>
       </header>
@@ -161,12 +198,22 @@ export default function HeroSection({
               the exact source, and keep every decision in human hands.
             </p>
             <div className="aero-actions">
-              <a href={signupHref} className="aero-primary-link">
-                <ArrowAction>Create your account</ArrowAction>
-              </a>
-              <a href={loginHref} className="aero-login-action">
-                <LockKeyhole size={15} /> Log in
-              </a>
+              {session === 'signed-in' ? (
+                <a href={reviewHref} className="aero-primary-link">
+                  <ArrowAction>Open your workspace</ArrowAction>
+                </a>
+              ) : session === 'guest' ? (
+                <>
+                  <a href={signupHref} className="aero-primary-link">
+                    <ArrowAction>Create your account</ArrowAction>
+                  </a>
+                  <a href={loginHref} className="aero-login-action">
+                    <LockKeyhole size={15} /> Log in
+                  </a>
+                </>
+              ) : (
+                <span className="aero-action-loading" aria-label="Checking account session" />
+              )}
               <button className="aero-secondary-link" onClick={() => setPreviewOpen(true)}>
                 <Play size={15} /> Explore a sample
               </button>

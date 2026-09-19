@@ -90,7 +90,8 @@
 .aero-header nav > a {
   border-bottom: 1px solid currentColor;
 }
-.aero-header nav > .aero-signup-link {
+.aero-header nav > .aero-signup-link,
+.aero-header nav > .aero-welcome-link {
   min-height: 42px;
   display: inline-flex;
   align-items: center;
@@ -99,6 +100,28 @@
   border-radius: 999px;
   color: var(--aero-lime);
   background: var(--aero-ink);
+}
+.aero-session-loading,
+.aero-action-loading {
+  display: inline-block;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1220230d, #12202320, #1220230d);
+  background-size: 200% 100%;
+  animation: aero-session-pulse 1.2s ease-in-out infinite;
+}
+.aero-session-loading {
+  width: 132px;
+  height: 42px;
+}
+.aero-action-loading {
+  width: 210px;
+  height: 54px;
+}
+@keyframes aero-session-pulse {
+  to {
+    background-position: -200% 0;
+  }
 }
 .aero-theme-toggle {
   border-color: #1220231f;
@@ -818,7 +841,8 @@
   .aero-header nav > .aero-login-link {
     display: none;
   }
-  .aero-header nav > .aero-signup-link {
+  .aero-header nav > .aero-signup-link,
+  .aero-header nav > .aero-welcome-link {
     min-height: 40px;
     padding-inline: 14px;
   }

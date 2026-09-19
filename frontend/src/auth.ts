@@ -29,20 +29,27 @@ export function configureAuth() {
   configured = true
 }
 
-async function resolveUser(): Promise<ClaimLensUser | null> {
+export async function getOptionalUser(): Promise<ClaimLensUser | null> {
   if (appMode === 'mock') return null
-  configureAuth()
   try {
+    configureAuth()
     await getCurrentUser()
     const session = await fetchAuthSession()
     const idToken = session.tokens?.idToken
     if (!idToken) throw new Error('Your session is missing an ID token. Please log in again.')
     return { id_token: idToken.toString(), profile: idToken.payload as Record<string, unknown> }
   } catch {
-    const returnTo = `${window.location.pathname}${window.location.search}`
-    window.location.assign(`/auth/login?returnTo=${encodeURIComponent(returnTo)}`)
     return null
   }
+}
+
+async function resolveUser(): Promise<ClaimLensUser | null> {
+  const user = await getOptionalUser()
+  if (!user && appMode !== 'mock') {
+    const returnTo = `${window.location.pathname}${window.location.search}`
+    window.location.assign(`/auth/login?returnTo=${encodeURIComponent(returnTo)}`)
+  }
+  return user
 }
 
 export function requireUser(): Promise<ClaimLensUser | null> {

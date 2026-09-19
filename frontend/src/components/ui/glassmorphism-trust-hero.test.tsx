@@ -1,7 +1,14 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import HeroSection from './glassmorphism-trust-hero'
+
+const auth = vi.hoisted(() => ({ getOptionalUser: vi.fn() }))
+vi.mock('@/auth', () => ({ getOptionalUser: auth.getOptionalUser }))
+
+beforeEach(() => {
+  auth.getOptionalUser.mockResolvedValue(null)
+})
 
 describe('ClaimLens opening hero', () => {
   it('keeps the landing page public and offers explicit account actions', () => {
@@ -57,5 +64,23 @@ describe('ClaimLens opening hero', () => {
     expect(screen.getByRole('region', { name: 'AWS architecture services' })).not.toHaveClass(
       'hero-services-paused',
     )
+  })
+
+  it('replaces guest actions with a personalized workspace action for an active session', async () => {
+    auth.getOptionalUser.mockResolvedValue({
+      id_token: 'token',
+      profile: { name: 'Uttkarsh Chambiyal', email: 'uttkarsh@example.com' },
+    })
+    render(<HeroSection />)
+    expect(await screen.findByRole('link', { name: 'Welcome, Uttkarsh' })).toHaveAttribute(
+      'href',
+      '/review',
+    )
+    expect(screen.getByRole('link', { name: 'Open your workspace' })).toHaveAttribute(
+      'href',
+      '/review',
+    )
+    expect(screen.queryByRole('link', { name: 'Create account' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Log in' })).not.toBeInTheDocument()
   })
 })
