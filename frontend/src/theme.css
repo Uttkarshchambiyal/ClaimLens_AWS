@@ -1,6 +1,6 @@
-/* One palette for the landing page, workspace, dialogs, and loading states. */
+/* ClaimLens uses the calm paper, charcoal and lime palette from the Aero UI. */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family:
     Inter,
     ui-sans-serif,
@@ -12,36 +12,81 @@
   font-synthesis: none;
   font-size: 16px;
   font-weight: 400;
-  background: #09090b;
-  color: #fafafa;
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #151517;
-  --card-foreground: #fafafa;
-  --primary: #fafafa;
-  --primary-foreground: #18181b;
-  --secondary: #27272a;
-  --secondary-foreground: #fafafa;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --accent: #ffcd75;
-  --accent-foreground: #18181b;
+  background: #f3f5ee;
+  color: #122023;
+  --background: #f3f5ee;
+  --foreground: #122023;
+  --card: #ffffff;
+  --card-foreground: #122023;
+  --primary: #122023;
+  --primary-foreground: #e1fcad;
+  --secondary: #e9ece4;
+  --secondary-foreground: #122023;
+  --muted: #e9ece4;
+  --muted-foreground: #687270;
+  --accent: #607b35;
+  --accent-foreground: #122023;
+  --border: #1220231a;
+  --input: #12202322;
+  --ring: #607b35;
+  --text-secondary: #3e4a49;
+  --text-muted: #687270;
+  --surface: #ffffff;
+  --surface-hover: #f0f3ea;
+  --surface-raised: #ffffff;
+  --accent-soft: #dff7ad66;
+  --accent-border: #85a64b70;
+  --success: #237450;
+  --success-soft: #23745012;
+  --danger: #b23b3b;
+  --danger-soft: #b23b3b0f;
+  --glass-shadow: 0 10px 34px #1220230a;
+  --radius: 1.15rem;
+  --backdrop-strong: #f3f5eef2;
+  --backdrop-soft: #f3f5eed9;
+  --backdrop-faint: #f0f3ea;
+  --document-stage: #e5e8e1;
+  --document-sheet: #ffffff;
+  --interactive-glow: transparent;
+  --interactive-vignette: transparent;
+}
+.light {
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
+  --background: #101716;
+  --foreground: #f3f5ee;
+  --card: #18211f;
+  --card-foreground: #f3f5ee;
+  --primary: #e1fcad;
+  --primary-foreground: #122023;
+  --secondary: #26302d;
+  --secondary-foreground: #f3f5ee;
+  --muted: #26302d;
+  --muted-foreground: #a8b1ae;
+  --accent: #c5e38f;
+  --accent-foreground: #122023;
   --border: #ffffff1a;
-  --input: #ffffff1a;
-  --ring: #ffcd75;
-  --text-secondary: #c4c4cc;
-  --text-muted: #a1a1aa;
-  --surface: #ffffff05;
-  --surface-hover: #ffffff0a;
-  --surface-raised: #1d1d20;
-  --accent-soft: #ffcd750d;
-  --accent-border: #ffcd753d;
-  --success: #92d9b6;
-  --success-soft: #92d9b612;
-  --danger: #f3aaaa;
-  --danger-soft: #f3aaaa12;
-  --glass-shadow: inset 0 1px 0 #ffffff05, 0 16px 48px #0000001a;
-  --radius: 1.25rem;
+  --input: #ffffff22;
+  --ring: #c5e38f;
+  --text-secondary: #cbd1ce;
+  --text-muted: #9da7a4;
+  --surface: #18211f;
+  --surface-hover: #222d2a;
+  --surface-raised: #1d2825;
+  --accent-soft: #dff7ad17;
+  --accent-border: #dff7ad42;
+  --success: #8bd6ad;
+  --success-soft: #8bd6ad12;
+  --danger: #f0a3a3;
+  --danger-soft: #f0a3a312;
+  --glass-shadow: 0 14px 40px #00000024;
+  --backdrop-strong: #101716f2;
+  --backdrop-soft: #101716db;
+  --backdrop-faint: #141d1b;
+  --document-stage: #0b1110;
+  --document-sheet: #ffffff;
 }
 * {
   box-sizing: border-box;
@@ -49,6 +94,11 @@
 body {
   margin: 0;
   min-width: 320px;
+  background: var(--background);
+  color: var(--foreground);
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
 }
 button,
 input,
@@ -95,4 +145,79 @@ select option {
   place-items: center;
   color: var(--text-secondary);
   background: var(--background);
+}
+
+.interactive-background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.interactive-background canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.76;
+}
+.interactive-background-subtle canvas {
+  opacity: 0.2;
+  filter: blur(0.25px);
+}
+.interactive-background-glow,
+.interactive-background-vignette {
+  position: absolute;
+  inset: 0;
+}
+.interactive-background-glow {
+  background:
+    radial-gradient(circle at 78% 18%, var(--interactive-glow), transparent 33%),
+    radial-gradient(
+      circle at 18% 82%,
+      color-mix(in srgb, var(--foreground) 5%, transparent),
+      transparent 34%
+    );
+}
+.interactive-background-vignette {
+  background: linear-gradient(
+    115deg,
+    var(--interactive-vignette),
+    transparent 58%,
+    var(--interactive-vignette)
+  );
+}
+.theme-toggle {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--foreground);
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+.theme-toggle:hover {
+  background: var(--surface-hover);
+  border-color: color-mix(in srgb, var(--foreground) 24%, transparent);
+  transform: translateY(-1px);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive-background canvas {
+    display: none;
+  }
+  .theme-toggle {
+    transition: none;
+  }
 }

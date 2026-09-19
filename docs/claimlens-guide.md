@@ -7,12 +7,12 @@ ClaimLens is a human-in-the-loop document review prototype for an insurance clai
 ### Honest assessment
 | Area | Assessment |
 | Local demonstration | Prepared for a synthetic walkthrough. Automated interaction and business-rule checks pass. |
-| Live AWS demonstration | NOT VERIFIED. No configured AWS region or credentials were found; AWS CLI and SAM CLI are unavailable on this machine. |
-| Browser appearance | VERIFIED for the explicit local mock flow in Chromium at desktop and mobile widths; four current screenshots were inspected. Production Cognito and signed-source rendering remain unverified. |
+| Live AWS demonstration | NOT VERIFIED. AWS CLI and SAM CLI are installed, but no AWS credentials or deployed stack are available yet. |
+| Browser appearance | VERIFIED for the explicit local mock flow in Chromium at desktop and mobile widths; six current screenshots were inspected. Production Cognito and signed-source rendering remain unverified. |
 | Hackathon eligibility | NOT VERIFIED. The event name, judging rubric, deadline and submission rules have not been supplied. |
 | Production medical use | NOT READY. Needs operational, privacy, security, extraction-accuracy and cloud acceptance work. |
 ### What you can confidently present
-A working synthetic reviewer journey, source-backed arithmetic and cross-document checks, a consistent dark-and-gold interface, explicit uncertainty, strict citation validation, AWS SAM infrastructure and a reproducible test suite. Demonstrate the distinction between review priority, extraction quality and coverage.
+A working synthetic reviewer journey, source-backed arithmetic and cross-document checks, a consistent paper-charcoal-lime interface, explicit uncertainty, strict citation validation, AWS SAM infrastructure and a reproducible test suite. Demonstrate the distinction between review priority, extraction quality and coverage.
 ### What not to claim
 Do not claim a deployed AWS solution, measured fraud-detection accuracy, insurance approval automation, clinical validity, regulatory compliance or proven OCR performance. No real medical records should be used for this hackathon prototype.
 The assessment date and exact verification results appear in the footer and on the verification page. Passing local checks does not remove the cloud-readiness gate.
@@ -20,7 +20,7 @@ The assessment date and exact verification results appear in the footer and on t
 ## 02 | Website and reviewer journey
 ### Main screens
 | Screen | What it does |
-| Landing page / | Glassmorphism hero, synthetic example, architecture-service strip and entry to the review workspace. Sample figures are not real customer metrics. |
+| Landing page / | Split-image Aero hero, synthetic example, architecture-service strip and entry to the review workspace. Sample figures are not real customer metrics. |
 | Review queue | Lists authorized packets, review priority, attention checks, coverage and document count. Search narrows the displayed packets. |
 | Claim review | Shows five-category check outcomes, selected finding, citations, extraction quality and coverage. Reviewer actions remain separate from automated results. |
 | Documents | Lists document type, version, pages, extraction state and quality. View evidence opens a cited source when available. |
@@ -85,7 +85,7 @@ Analyses retain a version-one snapshot, source extraction and annotation history
 
 ## 06 | Rules, amounts and uncertainty
 | Check | Inputs and interpretation |
-| Bill reconciliation | Sum integer-paise line items from a single invoice and compare with its invoice total. Default tolerance: INR 1.00. Conflicting totals, unresolved adjustments and ambiguous amounts prevent a pass. |
+| Bill reconciliation | Sum integer-paise line items plus explicit tax/GST, discount and signed round-off adjustments from a single invoice, then compare with its invoice total. Default tolerance: INR 1.00. Conflicting totals and ambiguous amounts prevent a pass. |
 | Patient identity | Compare reliable identifiers across at least two distinct documents. Repeated fields in one document do not constitute a cross-document match. |
 | Timeline | Compare admission, discharge and available procedure dates. Default allowance is one day outside the stay window. A same-day stay is not automatically suspicious. |
 | Supporting evidence | Procedure/device charges prompt a request for relevant support. A report's presence alone does not prove it supports the charge; absence does not mean care did not occur. |
@@ -94,7 +94,7 @@ Analyses retain a version-one snapshot, source extraction and annotation history
 PASS means the stated check succeeded on its available evidence. FINDING means a discrepancy needs human review. INSUFFICIENT_EVIDENCE means the check cannot be completed reliably. NOT_APPLICABLE means the defined condition does not apply. ERROR means the check or dependency could not run reliably. Never treat missing evidence or an AI outage as a pass.
 ### Money and dates
 Invoice total, amount paid, balance due and claimed amount are separate normalized fields; they are not interchangeable. Claimed amount remains unknown when absent. Arithmetic uses integer paise with configurable HALF_UP or HALF_EVEN rounding. Indian and Western thousands grouping are supported; malformed grouping and ambiguous decimal commas are rejected or flagged.
-Numeric dates are ambiguous by default: DATE_ORDER=ISO_ONLY accepts ISO dates; DMY or MDY must be selected explicitly for numeric date formats. Stay-day allowance is a timeline assumption, not an implemented room-day or tariff billing policy. Tax, discount and round-off adjustments still require explicit normalization/review rather than inferred arithmetic.
+Numeric dates are ambiguous by default: DATE_ORDER=ISO_ONLY accepts ISO dates; DMY or MDY must be selected explicitly for numeric date formats. Stay-day allowance is a timeline assumption, not an implemented room-day or tariff billing policy. Repeated table headers and summary rows are excluded; explicit tax/GST, discount and signed round-off rows are normalized without inventing a missing sign. Values below the configurable `MinFieldConfidence` default of 80 require human confirmation and cannot create a clean result.
 
 ## 07 | Bounded AI: what it can and cannot do
 ### Input and scope
@@ -135,11 +135,11 @@ Partial extraction is labeled PARTIAL, not READY. Such fields are retained but e
 | Workflow | Standard workflow with three concurrent document branches, five-second polling and a one-hour execution timeout. |
 | Model | 120 evidence fields / 40 KB input bound; 1,800 output token cap. |
 ### Remaining reliability work
-These limits reduce but do not formally prove compliance with every DynamoDB item or Step Functions payload quota. Top-level execution timeout reconciliation, transactional source-version pinning under racing starts, large-history pagination and long-running load tests remain open. The prototype is not designed for unrestricted hospital-scale packets.
+The maximum-shape local benchmark now exercises ten documents, 120 source-cited fields and the 220,000-byte combined-field bound. These measurements do not formally prove deployed DynamoDB, Lambda, Textract or Step Functions quotas. Top-level execution timeout reconciliation, transactional source-version pinning under racing starts, large-history pagination and long-running cloud load tests remain open. The prototype is not designed for unrestricted hospital-scale packets.
 
 ## 10 | Frontend structure and operation
 ### Shared interface
-theme.css holds the charcoal/gold palette, text colors, focus rings and surfaces. hero.css provides Tailwind and landing animations; styles.css applies the same theme to the review workspace. The src/components/ui directory and @/ alias follow the shadcn-compatible structure. No second component root or new project initializer is required.
+theme.css holds the paper, charcoal and lime palette, text colors, focus rings and surfaces. hero.css provides Tailwind and the responsive split-image landing layout; styles.css applies the same low-noise visual system to the review workspace. The src/components/ui directory and @/ alias follow the shadcn-compatible structure. No second component root or new project initializer is required.
 App.tsx owns queue/review/activity state, selected analysis, status polling, search, filters and actions. UploadDialog.tsx validates packet composition and preserves a retry key. SourceViewer.tsx handles PDF/image rendering, zoom, pagination, source geometry, correction forms and a small-screen drawer. api.ts separates real requests from explicit mock adapters; auth.ts handles Cognito sessions and token refresh.
 ### Routes and configuration
 | Setting | Purpose |
@@ -150,12 +150,12 @@ App.tsx owns queue/review/activity state, selected analysis, status polling, sea
 | VITE_API_BASE_URL | Deployed HTTP API endpoint. |
 | VITE_COGNITO_* | Authority, client ID, redirect/logout URIs and hosted Cognito domain; see frontend/.env.example. |
 ### Implemented interaction safeguards
-The logo returns home, navigation restores URLs, screen searches do not leak into other views, review tabs support arrow/Home/End keys, source zoom can shrink the page, and failed correction saves retain input without hiding evidence. Dialog labels, focus rings, reduced-motion styling and responsive layouts are implemented. Chromium automation now covers the mock journey at 1536x960 and 390x844; four screenshots were inspected. Download behavior, additional browser engines, production authentication, and real signed-source rendering still need deployed acceptance.
+The logo returns home, navigation restores URLs, screen searches do not leak into other views, review tabs support arrow/Home/End keys, source zoom can shrink the page, and failed correction saves retain input without hiding evidence. Dialog labels, focus rings, reduced-motion styling and responsive layouts are implemented. Chromium automation now covers the landing page, queue, review, source viewer and upload dialog at 1536x960 and 390x844; six screenshots were inspected. Download behavior, additional browser engines, production authentication, and real signed-source rendering still need deployed acceptance.
 
 ## 11 | Verification and audit findings
 :::verification
 ### What the tests actually establish
-Python tests exercise safe arithmetic, ambiguous normalization, citation validity, tenant isolation, duplicate requests, partial failures, snapshot retries and four synthetic packet categories. Moto tests emulate DynamoDB/S3 with real SDK serialization. Worker tests stub Textract/model dependencies to inspect job reuse, pagination, pinned source versions and failure behavior.
+Python tests exercise safe arithmetic, explicit adjustments, low-confidence gating, repeated headers, multilingual labels, citation validity, tenant isolation, duplicate requests, partial failures, snapshot retries and five synthetic packet categories. Moto tests emulate DynamoDB/S3 with real SDK serialization. Worker tests stub Textract/model dependencies to inspect job reuse, pagination, pinned source versions and failure behavior.
 React tests run in jsdom. They cover queue selection, filtering, reviewer dispositions, corrections, failed-save retry, mock upload submission, tab keyboard behavior, evidence navigation, report-download initiation, hero sample dialogs and animation controls. A separate Playwright flow exercises desktop/mobile Chromium navigation, reviewer mutation, audit activity, evidence, and dialogs while rejecting page/console errors, duplicate IDs, missing image alt text, and viewport overflow. It does not establish real PDF download behavior or cloud service correctness.
 ### Improvements from this readiness pass
 - Required explicit numeric date order; rejected malformed/sign-conflicted/unsafe amounts and missing/nonfinite geometry.
@@ -208,16 +208,15 @@ Use this project as a credible prototype submission only with an accurate status
 ### Code and artifacts to inspect
 | Artifact | Why it matters |
 | template.yaml | Actual AWS resources, parameters, permissions and workflow definition. |
-| backend/claimlens/ | Source of truth for extraction, normalization, checks, model boundary and API behavior. |
-| frontend/src/ | Reviewer interface, shared theme, local adapters and real API/auth wiring. |
-| synthetic/*.json | Consistent, inconsistent, ambiguous and legitimate edge-case rule inputs. Not original scan/PDF fixtures or an OCR benchmark. |
-| backend/tests/ and frontend/src/*.test.tsx | Executable acceptance evidence and regression coverage. |
-| docs/verification-results.json | Timestamped output of the local verification script. No live-cloud pass is inferred. |
-| scripts/verify_project.py | Runs dependency consistency, compilation, tests, production build, formatting, SAM lint, shell syntax and desktop/mobile Chromium acceptance without deployment. |
+| backend/claimlens/ + frontend/src/ | Backend extraction/check/model logic and the reviewer interface, theme, API and auth wiring. |
+| synthetic/ + benchmarks/ | Local rule packets plus ground truth and the eight-page live OCR corpus. |
+| scripts/evaluate_quality.py | Local status accuracy, finding precision/recall/F1, confusion and false-clean gate. |
+| scripts/evaluate_live_aws.py + scripts/run_live_acceptance.py | Paid live Textract/Bedrock metrics plus sanitized Cognito, tenant, S3, workflow, report and source-overlay acceptance. |
+| tests + docs/verification-results.json | Executable regression evidence and the timestamped local verification report. |
+| scripts/verify_project.py | Compilation, tests, benchmarks, build, formatting, SAM lint and desktop/mobile browser acceptance. |
 | scripts/verify_aws.sh | Initial cloud capability probe; requires credentials, selected region/model and AWS CLI. |
-| .github/workflows/verify.yml | CI definition for tests/build/lint. Must still be run in the actual repository. |
 ### Priorities after the hackathon gate
-First verify cloud behavior and OCR/source overlays on original synthetic PDF fixtures. Next implement correction-driven reanalysis. Then improve clinical/table normalization, large-packet storage, prior-invoice comparison, deployed retention observation and timeout recovery. Do not add agents, vector databases, model training or forgery detection until these fundamentals are reliable.
+First run the included live OCR/model benchmark in the selected AWS region and verify production source overlays. Next implement correction-driven reanalysis. Then expand the labeled layout corpus, deployed load testing, prior-invoice comparison, retention observation and timeout recovery. Do not add agents, vector databases, model training or forgery detection until these fundamentals are reliable.
 ### Official references checked during this assessment
 1. Amazon Bedrock, Model availability and compatibility: https://docs.aws.amazon.com/bedrock/latest/userguide/models.html
 2. AWS Step Functions, Service quotas: https://docs.aws.amazon.com/step-functions/latest/dg/service-quotas.html

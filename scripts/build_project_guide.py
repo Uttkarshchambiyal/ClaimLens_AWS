@@ -28,8 +28,8 @@ styles = {
     'body': ParagraphStyle('body', fontName='Helvetica', fontSize=9.5, leading=14, textColor=INK, spaceAfter=7.5),
     'cell': ParagraphStyle('cell', fontName='Helvetica', fontSize=8.5, leading=12.2, textColor=INK),
     'head': ParagraphStyle('head', fontName='Helvetica-Bold', fontSize=8.5, leading=12.2, textColor=colors.white),
-    'cell_compact': ParagraphStyle('cell_compact', fontName='Helvetica', fontSize=7.8, leading=10.2, textColor=INK),
-    'head_compact': ParagraphStyle('head_compact', fontName='Helvetica-Bold', fontSize=7.8, leading=10.2, textColor=colors.white),
+    'cell_compact': ParagraphStyle('cell_compact', fontName='Helvetica', fontSize=7.1, leading=8.8, textColor=INK),
+    'head_compact': ParagraphStyle('head_compact', fontName='Helvetica-Bold', fontSize=7.1, leading=8.8, textColor=colors.white),
     'code': ParagraphStyle('code', fontName='Courier', fontSize=8, leading=12, textColor=INK, backColor=colors.HexColor('#f4f4f6'), borderPadding=10, spaceBefore=6, spaceAfter=12),
 }
 
@@ -48,7 +48,7 @@ def table(rows, compact=False):
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f6f6f8'), colors.white]),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 9), ('RIGHTPADDING', (0, 0), (-1, -1), 9),
-        ('TOPPADDING', (0, 0), (-1, -1), 4 if compact else 7), ('BOTTOMPADDING', (0, 0), (-1, -1), 4 if compact else 7),
+        ('TOPPADDING', (0, 0), (-1, -1), 2.5 if compact else 7), ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5 if compact else 7),
         ('LINEBELOW', (0, 0), (-1, 0), 1, GOLD),
         ('LINEBELOW', (0, 1), (-1, -1), .3, colors.HexColor('#e1e1e6')),
     ]))
@@ -107,7 +107,7 @@ def main():
         elif line == ':::architecture': story.extend([Architecture(), Spacer(1, 8)])
         elif line == ':::verification':
             rows = [['Verification', 'Recorded result']]
-            labels = {'dependency_check': 'Python dependency consistency', 'backend_compile': 'Python bytecode compilation', 'backend_tests': 'Python regression tests', 'frontend_tests': 'React interaction tests', 'production_build': 'TypeScript + Vite build', 'sam_lint': 'CloudFormation / SAM lint', 'formatting': 'Frontend formatting', 'verifier_syntax': 'AWS verifier shell syntax', 'browser_smoke': 'Desktop/mobile browser workflow'}
+            labels = {'dependency_check': 'Python dependency consistency', 'backend_compile': 'Python bytecode compilation', 'backend_tests': 'Python regression tests', 'quality_benchmark': 'Labeled rule quality benchmark', 'large_packet_benchmark': 'Maximum-shape packet benchmark', 'evaluation_artifact': 'Eight-page OCR artifact validation', 'frontend_tests': 'React interaction tests', 'production_build': 'TypeScript + Vite build', 'sam_lint': 'CloudFormation / SAM lint', 'formatting': 'Frontend formatting', 'verifier_syntax': 'AWS verifier shell syntax', 'browser_smoke': 'Desktop/mobile browser workflow'}
             for result in report['checks']:
                 count = re.search(r'(\d+) passed', result['output'])
                 summary = result['status']

@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-09-19T04:34:38.824161+00:00",
+  "scope": "Local maximum-shape benchmark only; does not measure AWS service latency or quotas.",
+  "documents": 10,
+  "fields": 120,
+  "serializedFieldBytes": 53783,
+  "configuredFieldLimit": 120,
+  "configuredCombinedByteLimit": 220000,
+  "elapsedMs": 3.302,
+  "analysisStatus": "COMPLETED_WITH_WARNINGS",
+  "withinBounds": true
+}

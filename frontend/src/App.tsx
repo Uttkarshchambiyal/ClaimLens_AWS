@@ -38,6 +38,7 @@ import {
 import { requireUser, signOut } from './auth'
 import { UploadDialog } from './components/UploadDialog'
 import { SourceViewer } from './components/SourceViewer'
+import { ThemeToggle } from './components/ui/theme-toggle'
 import type {
   Analysis,
   CheckStatus,
@@ -495,6 +496,7 @@ export function App() {
             </strong>
           </div>
           <div className="topbar-actions">
+            <ThemeToggle />
             {appMode === 'production' && (
               <button
                 className="icon-button mobile-signout"

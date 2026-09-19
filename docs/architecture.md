@@ -6,7 +6,7 @@
 2. API Gateway validates the token. The API Lambda derives tenancy only from the validated claim, never from the request body.
 3. The UI creates a claim, requests a short-lived presigned POST per document, uploads directly to a private versioned S3 bucket under an S3-enforced content-type/encryption/size policy, and starts an analysis with an idempotency key.
 4. Step Functions Standard returns control immediately and processes documents asynchronously. Each document worker reuses a recorded Textract job ID on retry.
-5. Textract output is preserved in S3. Normalized fields in DynamoDB keep a document version, page, block IDs, normalized geometry, confidence, and excerpt.
+5. Textract output is preserved in S3. Normalized fields in DynamoDB keep a document version, page, block IDs, normalized geometry, confidence, and excerpt. Values below `MinFieldConfidence` remain visible but are labeled `LOW_CONFIDENCE`, so they cannot produce a clean deterministic result.
 6. Deterministic rules run first. Bedrock receives only a bounded evidence bundle with opaque citations and no tools or browsing. Its JSON response is rejected if its exact schema, enum values, or citations are invalid.
 7. Reviewers inspect findings and evidence, annotate extraction corrections without overwriting raw extraction, record a disposition, and export a JSON report identifying its analysis version. Mutations record the authenticated Cognito subject, and disposition changes create append-only audit events. Corrections do not yet rerun automated checks; the report states this explicitly.
 
@@ -22,6 +22,7 @@ Document bytes and complete Textract responses live under tenant/claim/document/
 - Model temperature is zero and input is limited to selected evidence. No agent, tools, browsing, write capability, or direct datastore access is exposed to the model.
 - `PASS`, `FINDING`, `INSUFFICIENT_EVIDENCE`, `NOT_APPLICABLE`, and `ERROR` are independent of review priority.
 - Extraction quality and evidence coverage are calculated and displayed separately.
+- Explicit tax/GST, discount and signed round-off rows participate in bill reconciliation; repeated headers and summary totals are not counted as line items.
 - Missing support creates a request for evidence. It is never converted into a statement that care did not occur.
 - Model or extraction failure produces a warning/error outcome and cannot silently become a clean result.
 
@@ -37,5 +38,7 @@ Document bytes and complete Textract responses live under tenant/claim/document/
 ## Bounded extraction and failure behavior
 
 Raw and normalized extraction are archived in S3. The inline document record is limited to 120 normalized fields and 160,000 serialized bytes; larger extractions produce a visible failure instead of an incomplete clean result. Combined analysis fields are bounded to 220,000 bytes. These prototype bounds do not replace deployment/load tests against AWS quotas.
+
+The local evaluation suite measures labeled rule precision/recall and the maximum supported ten-document/120-field shape. The separate live evaluator runs the generated multi-layout PDF through Textract and optionally repeats Bedrock comparison. Local metrics do not establish live AWS accuracy.
 
 Discharge/report prose includes at most 40 source-cited lines, capped at 240 characters each. Billed procedure descriptions retain source blocks for bounded semantic comparison. This is not a complete clinical-record analysis. Partial Textract results are labeled `PARTIAL` and excluded from automatic complete-packet checks. Completed workers skip repeated extraction/model calls; existing analysis snapshots win during interrupted-write recovery.

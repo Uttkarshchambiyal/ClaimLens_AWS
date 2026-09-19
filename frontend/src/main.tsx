@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import HeroDemo from '@/components/demo'
+import { ThemeProvider } from '@/components/ui/theme-provider'
 import './hero.css'
 
 const ReviewApp = lazy(() => import('./App').then((module) => ({ default: module.App })))
@@ -11,18 +12,20 @@ const isReview =
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {isReview ? (
-      <Suspense
-        fallback={
-          <div role="status" className="route-loading">
-            Opening review workspace…
-          </div>
-        }
-      >
-        <ReviewApp />
-      </Suspense>
-    ) : (
-      <HeroDemo />
-    )}
+    <ThemeProvider defaultTheme="light" enableSystem storageKey="claimlens-theme">
+      {isReview ? (
+        <Suspense
+          fallback={
+            <div role="status" className="route-loading">
+              Opening review workspace…
+            </div>
+          }
+        >
+          <ReviewApp />
+        </Suspense>
+      ) : (
+        <HeroDemo />
+      )}
+    </ThemeProvider>
   </React.StrictMode>,
 )

@@ -26,23 +26,28 @@ def reconcile_bill(fields: Iterable[ExtractedField], settings: Settings) -> Find
     values = _index(fields)
     totals = values.get("invoice_total", [])
     lines = values.get("line_item_amount", [])
-    cited = [item.evidence.evidence_id for item in lines + totals]
-    if len({item.evidence.document_id for item in lines + totals}) > 1:
+    adjustments = values.get("invoice_adjustment", [])
+    reconciled_values = lines + adjustments + totals
+    cited = [item.evidence.evidence_id for item in reconciled_values]
+    if len({item.evidence.document_id for item in reconciled_values}) > 1:
         return _finding("bill.total_reconciliation", "Multiple bill sources need review", "Amounts from different invoices cannot be added into one reconciliation.", CheckStatus.INSUFFICIENT_EVIDENCE, Priority.MEDIUM, cited, "Review each invoice separately.")
     if not totals:
         return _finding("bill.total_reconciliation", "Invoice total unavailable", "The invoice total could not be extracted, so arithmetic reconciliation was not possible.", CheckStatus.INSUFFICIENT_EVIDENCE, Priority.MEDIUM, [item.evidence.evidence_id for item in lines], "Request a legible page containing the invoice total.")
     if not lines:
         return _finding("bill.total_reconciliation", "Line items unavailable", "No reliable line-item amounts were extracted, so the stated invoice total was not treated as verified.", CheckStatus.INSUFFICIENT_EVIDENCE, Priority.MEDIUM, [totals[0].evidence.evidence_id], "Request a legible itemized bill.")
-    if any(item.normalization_status != "NORMALIZED" or isinstance(item.normalized_value, bool) or not isinstance(item.normalized_value, (int, Decimal)) or item.normalized_value != int(item.normalized_value) for item in lines + totals):
+    if any(item.normalization_status != "NORMALIZED" or isinstance(item.normalized_value, bool) or not isinstance(item.normalized_value, (int, Decimal)) or item.normalized_value != int(item.normalized_value) for item in reconciled_values):
         return _finding("bill.total_reconciliation", "Amount normalization is ambiguous", "At least one monetary value could not be normalized unambiguously. The total check was not marked clean.", CheckStatus.INSUFFICIENT_EVIDENCE, Priority.MEDIUM, cited, "Confirm the currency and decimal separators on the source bill.")
     if len({int(item.normalized_value) for item in totals}) > 1:
         return _finding("bill.total_reconciliation", "Conflicting invoice totals", "The bill contains more than one distinct invoice total. Confirm the intended total before reconciliation.", CheckStatus.INSUFFICIENT_EVIDENCE, Priority.MEDIUM, cited)
     line_sum = sum(int(item.normalized_value) for item in lines)
+    adjustment_sum = sum(int(item.normalized_value) for item in adjustments)
+    calculated_total = line_sum + adjustment_sum
     invoice_total = int(totals[0].normalized_value)
-    difference = invoice_total - line_sum
+    difference = invoice_total - calculated_total
+    adjustment_text = f" after {format_inr(adjustment_sum)} in explicit adjustments" if adjustments else ""
     if abs(difference) <= settings.money_tolerance_paise:
-        return _finding("bill.total_reconciliation", "Invoice total reconciles", f"Line items total {format_inr(line_sum)}, matching the stated invoice total within the configured {format_inr(settings.money_tolerance_paise)} tolerance.", CheckStatus.PASS, Priority.LOW, cited)
-    return _finding("bill.total_reconciliation", "Invoice total does not reconcile", f"Line items total {format_inr(line_sum)}, a difference of {format_inr(difference)} from the stated invoice total {format_inr(invoice_total)}. Tolerance: {format_inr(settings.money_tolerance_paise)}.", CheckStatus.FINDING, Priority.HIGH, cited)
+        return _finding("bill.total_reconciliation", "Invoice total reconciles", f"Line items total {format_inr(line_sum)}{adjustment_text}, matching the stated invoice total within the configured {format_inr(settings.money_tolerance_paise)} tolerance.", CheckStatus.PASS, Priority.LOW, cited)
+    return _finding("bill.total_reconciliation", "Invoice total does not reconcile", f"Line items total {format_inr(line_sum)}{adjustment_text}, a difference of {format_inr(difference)} from the stated invoice total {format_inr(invoice_total)}. Tolerance: {format_inr(settings.money_tolerance_paise)}.", CheckStatus.FINDING, Priority.HIGH, cited)
 
 
 def check_patient_identity(fields: Iterable[ExtractedField]) -> Finding:

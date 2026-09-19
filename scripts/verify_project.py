@@ -12,6 +12,9 @@ CHECKS = [
     ('dependency_check', [sys.executable, '-m', 'pip', 'check'], ROOT),
     ('backend_compile', [sys.executable, '-m', 'compileall', '-q', 'backend', 'scripts'], ROOT),
     ('backend_tests', [sys.executable, '-m', 'pytest', 'backend/tests', '-o', 'addopts=', '-q'], ROOT),
+    ('quality_benchmark', [sys.executable, 'scripts/evaluate_quality.py'], ROOT),
+    ('large_packet_benchmark', [sys.executable, 'scripts/benchmark_large_packet.py'], ROOT),
+    ('evaluation_artifact', [sys.executable, 'scripts/verify_evaluation_artifact.py'], ROOT),
     ('sam_lint', [str(Path(sys.executable).parent / 'cfn-lint'), 'template.yaml'], ROOT),
     ('verifier_syntax', ['bash', '-n', 'scripts/verify_aws.sh'], ROOT),
     ('frontend_tests', ['npm', 'test'], ROOT / 'frontend'),
@@ -40,6 +43,8 @@ def main():
         'samCliAvailable': bool(shutil.which('sam')),
         'liveAwsVerified': False,
         'browserSmokeVerified': next((r['status'] == 'PASS' for r in results if r['check'] == 'browser_smoke'), False),
+        'qualityBenchmarkVerified': next((r['status'] == 'PASS' for r in results if r['check'] == 'quality_benchmark'), False),
+        'largePacketBenchmarkVerified': next((r['status'] == 'PASS' for r in results if r['check'] == 'large_packet_benchmark'), False),
         'browserVisualVerified': os.getenv('CLAIMLENS_BROWSER_VISUAL_VERIFIED') == '1',
         'readiness': 'LOCAL_CHECKS_PASS_CLOUD_GATE_PENDING' if all(r['status'] == 'PASS' for r in results) else 'LOCAL_CHECKS_FAILED',
     }

@@ -1,0 +1,160 @@
+{
+  "checkedAt": "2026-09-19T04:34:38.780018+00:00",
+  "scope": "Labeled synthetic normalized-field regression only; not live OCR or Bedrock accuracy.",
+  "metrics": {
+    "evaluatedChecks": 17,
+    "exactMatches": 17,
+    "statusAccuracy": 1.0,
+    "findingPrecision": 1.0,
+    "findingRecall": 1.0,
+    "findingF1": 1.0,
+    "falseCleanCount": 0,
+    "confusion": {
+      "FINDING->FINDING": 3,
+      "INSUFFICIENT_EVIDENCE->INSUFFICIENT_EVIDENCE": 4,
+      "PASS->PASS": 10
+    }
+  },
+  "statusDistribution": {
+    "FINDING": 3,
+    "INSUFFICIENT_EVIDENCE": 4,
+    "PASS": 10
+  },
+  "cases": [
+    {
+      "case": "adjustments.json",
+      "description": "Fictional bill with explicit GST, discount and round-off adjustments.",
+      "expected": {
+        "bill.total_reconciliation": "PASS",
+        "packet.patient_identity": "PASS",
+        "packet.timeline": "PASS",
+        "history.invoice_match": "PASS"
+      },
+      "actual": {
+        "bill.total_reconciliation": "PASS",
+        "packet.patient_identity": "PASS",
+        "packet.timeline": "PASS",
+        "history.invoice_match": "PASS"
+      },
+      "metrics": {
+        "evaluatedChecks": 4,
+        "exactMatches": 4,
+        "statusAccuracy": 1.0,
+        "findingPrecision": 0.0,
+        "findingRecall": 0.0,
+        "findingF1": 0.0,
+        "falseCleanCount": 0,
+        "confusion": {
+          "PASS->PASS": 4
+        }
+      }
+    },
+    {
+      "case": "ambiguous.json",
+      "description": "Fictional packet with a comma that could represent a decimal separator.",
+      "expected": {
+        "bill.total_reconciliation": "INSUFFICIENT_EVIDENCE",
+        "packet.patient_identity": "INSUFFICIENT_EVIDENCE",
+        "packet.timeline": "INSUFFICIENT_EVIDENCE"
+      },
+      "actual": {
+        "bill.total_reconciliation": "INSUFFICIENT_EVIDENCE",
+        "packet.patient_identity": "INSUFFICIENT_EVIDENCE",
+        "packet.timeline": "INSUFFICIENT_EVIDENCE"
+      },
+      "metrics": {
+        "evaluatedChecks": 3,
+        "exactMatches": 3,
+        "statusAccuracy": 1.0,
+        "findingPrecision": 0.0,
+        "findingRecall": 0.0,
+        "findingF1": 0.0,
+        "falseCleanCount": 0,
+        "confusion": {
+          "INSUFFICIENT_EVIDENCE->INSUFFICIENT_EVIDENCE": 3
+        }
+      }
+    },
+    {
+      "case": "consistent.json",
+      "description": "Fictional packet whose arithmetic, patient identifier, and dates agree.",
+      "expected": {
+        "bill.total_reconciliation": "PASS",
+        "packet.patient_identity": "PASS",
+        "packet.timeline": "PASS"
+      },
+      "actual": {
+        "bill.total_reconciliation": "PASS",
+        "packet.patient_identity": "PASS",
+        "packet.timeline": "PASS"
+      },
+      "metrics": {
+        "evaluatedChecks": 3,
+        "exactMatches": 3,
+        "statusAccuracy": 1.0,
+        "findingPrecision": 0.0,
+        "findingRecall": 0.0,
+        "findingF1": 0.0,
+        "falseCleanCount": 0,
+        "confusion": {
+          "PASS->PASS": 3
+        }
+      }
+    },
+    {
+      "case": "inconsistent.json",
+      "description": "Fictional packet with a total mismatch, patient mismatch, and procedure outside the stay.",
+      "expected": {
+        "bill.total_reconciliation": "FINDING",
+        "packet.patient_identity": "FINDING",
+        "packet.timeline": "FINDING"
+      },
+      "actual": {
+        "bill.total_reconciliation": "FINDING",
+        "packet.patient_identity": "FINDING",
+        "packet.timeline": "FINDING"
+      },
+      "metrics": {
+        "evaluatedChecks": 3,
+        "exactMatches": 3,
+        "statusAccuracy": 1.0,
+        "findingPrecision": 1.0,
+        "findingRecall": 1.0,
+        "findingF1": 1.0,
+        "falseCleanCount": 0,
+        "confusion": {
+          "FINDING->FINDING": 3
+        }
+      }
+    },
+    {
+      "case": "legitimate-edge.json",
+      "description": "Fictional same-day stay with distinct paid, due, and claimed values plus a missing implant support record.",
+      "expected": {
+        "bill.total_reconciliation": "PASS",
+        "packet.patient_identity": "PASS",
+        "packet.timeline": "PASS",
+        "packet.supporting_evidence": "INSUFFICIENT_EVIDENCE"
+      },
+      "actual": {
+        "bill.total_reconciliation": "PASS",
+        "packet.patient_identity": "PASS",
+        "packet.timeline": "PASS",
+        "packet.supporting_evidence": "INSUFFICIENT_EVIDENCE"
+      },
+      "metrics": {
+        "evaluatedChecks": 4,
+        "exactMatches": 4,
+        "statusAccuracy": 1.0,
+        "findingPrecision": 0.0,
+        "findingRecall": 0.0,
+        "findingF1": 0.0,
+        "falseCleanCount": 0,
+        "confusion": {
+          "INSUFFICIENT_EVIDENCE->INSUFFICIENT_EVIDENCE": 1,
+          "PASS->PASS": 3
+        }
+      }
+    }
+  ]
+}

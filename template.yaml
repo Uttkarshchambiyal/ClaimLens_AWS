@@ -43,6 +43,12 @@ Parameters:
     Default: ISO_ONLY
     AllowedValues: [ISO_ONLY, DMY, MDY]
     Description: Only ISO dates are normalized unless a numeric date order is explicitly selected
+  MinFieldConfidence:
+    Type: Number
+    Default: 80
+    MinValue: 0
+    MaxValue: 100
+    Description: Extracted values below this Textract confidence require human confirmation
 
 Globals:
   Function:
@@ -62,6 +68,7 @@ Globals:
         STAY_DAY_ALLOWANCE: !Ref StayDayAllowance
         ROUNDING_MODE: !Ref RoundingMode
         DATE_ORDER: !Ref DateOrder
+        MIN_FIELD_CONFIDENCE: !Ref MinFieldConfidence
         RETENTION_DAYS: !Ref RetentionDays
         ALLOWED_ORIGIN: !Ref AllowedOrigin
         USE_BEDROCK: 'true'
@@ -367,6 +374,10 @@ Resources:
       UserPoolId: !Ref UserPool
       GenerateSecret: false
       PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows: [code]
       AllowedOAuthScopes: [openid, email, profile]
@@ -389,4 +400,5 @@ Outputs:
   UserPoolClientId: { Value: !Ref UserPoolClient }
   CognitoDomain: { Value: !Sub 'https://${UserPoolDomain}.auth.${AWS::Region}.amazoncognito.com' }
   DocumentsBucketName: { Value: !Ref DocumentsBucket }
+  RecordsTableName: { Value: !Ref RecordsTable }
   AnalysisStateMachineArn: { Value: !Ref AnalysisStateMachine }

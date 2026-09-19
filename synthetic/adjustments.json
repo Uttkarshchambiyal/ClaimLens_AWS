@@ -1,0 +1,24 @@
+{
+  "packetId": "synthetic-adjustments-001",
+  "description": "Fictional bill with explicit GST, discount and round-off adjustments.",
+  "documentTypes": ["BILL", "DISCHARGE_SUMMARY"],
+  "fields": [
+    {"name":"line_item_amount","value":"1000.00","normalizedValue":100000,"documentId":"bill","blockId":"b1"},
+    {"name":"invoice_adjustment","value":"180.00","normalizedValue":18000,"documentId":"bill","blockId":"b2"},
+    {"name":"invoice_adjustment","value":"-50.00","normalizedValue":-5000,"documentId":"bill","blockId":"b3"},
+    {"name":"invoice_adjustment","value":"-0.50","normalizedValue":-50,"documentId":"bill","blockId":"b4"},
+    {"name":"invoice_total","value":"1129.50","normalizedValue":112950,"documentId":"bill","blockId":"b5"},
+    {"name":"invoice_number","value":"INV-ADJ-1","normalizedValue":"INV-ADJ-1","documentId":"bill","blockId":"b6"},
+    {"name":"provider_identifier","value":"HOSP-ADJ","normalizedValue":"HOSP-ADJ","documentId":"bill","blockId":"b7"},
+    {"name":"patient_identifier","value":"MEM-ADJ","normalizedValue":"MEM-ADJ","documentId":"bill","blockId":"b8"},
+    {"name":"patient_identifier","value":"MEM-ADJ","normalizedValue":"MEM-ADJ","documentId":"summary","blockId":"s1"},
+    {"name":"admission_date","value":"2026-09-18","normalizedValue":"2026-09-18","documentId":"summary","blockId":"s2"},
+    {"name":"discharge_date","value":"2026-09-19","normalizedValue":"2026-09-19","documentId":"summary","blockId":"s3"}
+  ],
+  "expected": {
+    "bill.total_reconciliation":"PASS",
+    "packet.patient_identity":"PASS",
+    "packet.timeline":"PASS",
+    "history.invoice_match":"PASS"
+  }
+}

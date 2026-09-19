@@ -10,7 +10,15 @@ from .models import EvidenceRef, ExtractedField, Geometry, evidence_to_dict
 from .money import parse_money_to_paise
 
 
-MONEY_FIELDS = {"invoice_total", "amount_paid", "balance_due", "claimed_amount", "line_item_amount", "procedure_or_device_charge"}
+MONEY_FIELDS = {
+    "invoice_total",
+    "amount_paid",
+    "balance_due",
+    "claimed_amount",
+    "line_item_amount",
+    "invoice_adjustment",
+    "procedure_or_device_charge",
+}
 DATE_FIELDS = {"admission_date", "discharge_date", "procedure_date"}
 
 
@@ -62,6 +70,8 @@ def fields_from_adapter(document_id: str, version: int, adapter_fields: list[dic
         blocks = item.get("blocks") or []
         ref = make_evidence(document_id, version, int(item.get("page", 1)), blocks, str(item.get("value", "")))
         normalized, status = normalize_field(str(item["name"]), item.get("value"), settings)
+        if ref.confidence < settings.min_field_confidence and status == "NORMALIZED":
+            status = "LOW_CONFIDENCE"
         field = ExtractedField(str(item["name"]), item.get("value"), normalized, ref, status)
         evidence[ref.evidence_id] = ref
         fields.append(field)

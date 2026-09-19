@@ -15,12 +15,12 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: pip install -r requirements-dev.txt
+      - run: pip install -r requirements-dev.txt -r requirements-docs.txt
       - run: npm ci
         working-directory: frontend
       - run: python -m playwright install --with-deps chromium
       - run: python scripts/verify_project.py
-      - run: python -m pip_audit -r backend/requirements.txt && python -m pip_audit -r requirements-dev.txt
+      - run: python -m pip_audit -r backend/requirements.txt && python -m pip_audit -r requirements-dev.txt && python -m pip_audit -r requirements-docs.txt
       - run: npm audit --audit-level=high
         working-directory: frontend
       - uses: actions/upload-artifact@v4

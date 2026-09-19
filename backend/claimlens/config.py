@@ -18,6 +18,7 @@ class Settings:
     date_order: str = os.getenv("DATE_ORDER", "ISO_ONLY")
     upload_expiry_seconds: int = int(os.getenv("UPLOAD_EXPIRY_SECONDS", "900"))
     retention_days: int = int(os.getenv("RETENTION_DAYS", "90"))
+    min_field_confidence: float = float(os.getenv("MIN_FIELD_CONFIDENCE", "80"))
     use_bedrock: bool = os.getenv("USE_BEDROCK", "true").lower() == "true"
 
     @property

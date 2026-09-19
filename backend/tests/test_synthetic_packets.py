@@ -20,7 +20,7 @@ def load_packet(name):
     return packet, fields
 
 
-@pytest.mark.parametrize("name", ["consistent.json", "inconsistent.json", "ambiguous.json", "legitimate-edge.json"])
+@pytest.mark.parametrize("name", ["consistent.json", "inconsistent.json", "ambiguous.json", "legitimate-edge.json", "adjustments.json"])
 def test_synthetic_packet_expectations(name):
     packet, fields = load_packet(name)
     actual = {finding.check_id: finding.status.value for finding in run_deterministic_checks(fields, set(packet["documentTypes"]), Settings())}

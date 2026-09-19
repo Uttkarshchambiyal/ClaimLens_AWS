@@ -5,6 +5,7 @@ from hashlib import sha256
 import json
 import os
 import re
+import unicodedata
 from typing import Any
 
 from .config import Settings
@@ -21,7 +22,39 @@ LABELS = {
     "bill number": "invoice_number", "provider id": "provider_identifier", "hospital id": "provider_identifier",
     "patient id": "patient_identifier", "member id": "patient_identifier", "admission date": "admission_date",
     "discharge date": "discharge_date", "procedure date": "procedure_date",
+    "net payable": "invoice_total", "net amount": "invoice_total", "total payable": "invoice_total",
+    "amount received": "amount_paid", "paid amount": "amount_paid", "claim amount": "claimed_amount",
+    "invoice no": "invoice_number", "bill no": "invoice_number", "uhid": "patient_identifier",
+    "patient number": "patient_identifier", "member number": "patient_identifier",
+    "date of admission": "admission_date", "date of discharge": "discharge_date",
+    "date of procedure": "procedure_date", "surgery date": "procedure_date",
+    "कुल राशि": "invoice_total", "कुल देय": "invoice_total", "भुगतान राशि": "amount_paid",
+    "बकाया राशि": "balance_due", "दावा राशि": "claimed_amount", "बिल संख्या": "invoice_number",
+    "अस्पताल आईडी": "provider_identifier", "रोगी आईडी": "patient_identifier", "सदस्य आईडी": "patient_identifier",
+    "भर्ती तिथि": "admission_date", "डिस्चार्ज तिथि": "discharge_date", "प्रक्रिया तिथि": "procedure_date",
 }
+
+AMOUNT_HEADERS = {"amount", "amount inr", "amount rs", "total amount", "net amount", "राशि"}
+SUMMARY_LABEL = re.compile(r"(?:grand total|sub ?total|total|invoice total|net total|amount paid|balance(?: due)?|कुल(?: राशि| देय)?)[\s:.-]*$")
+ADJUSTMENT_TERMS = ("discount", "rebate", "tax", "gst", "cgst", "sgst", "igst", "round off", "rounding", "छूट", "कर")
+PROCEDURE_PATTERN = re.compile(
+    r"\b(?:implant|prosthesis|procedure|surgery|operative|arthroscop\w*|endoscop\w*|replacement|tkr|thr|cabg|pci|stent|mri|ct(?: scan)?|usg|ultrasound|ecg|chemotherapy|radiotherapy)\b|प्रक्रिया|शल्य|प्रत्यारोपण",
+    re.IGNORECASE,
+)
+
+
+def _normalized_label(value: str) -> str:
+    value = unicodedata.normalize("NFKC", value).casefold().strip()
+    value = re.sub(r"[\s\u00a0]+", " ", value)
+    return value.strip(" :.-")
+
+
+def _adjustment_value(description: str, value: str) -> str:
+    """Return a signed adjustment without guessing an unreadable printed sign."""
+    text = value.strip()
+    if any(term in description for term in ("discount", "rebate", "छूट")) and not text.startswith(("-", "+", "(")):
+        return "-" + text
+    return text
 
 
 def _clients(settings: Settings):
@@ -56,7 +89,7 @@ def _adapter_fields(blocks: list[dict[str, Any]], document_type: str = "BILL") -
     for block in blocks:
         if block.get("BlockType") != "KEY_VALUE_SET" or "KEY" not in block.get("EntityTypes", []): continue
         label, _ = _related_text(block, by_id, "CHILD")
-        canonical = LABELS.get(label.casefold().strip(" :"))
+        canonical = LABELS.get(_normalized_label(label))
         if not canonical: continue
         value_blocks = []
         for relation in block.get("Relationships", []):
@@ -78,7 +111,7 @@ def _adapter_fields(blocks: list[dict[str, Any]], document_type: str = "BILL") -
         header_row = None
         for row_number in sorted(rows):
             for column, (value, _, _) in rows[row_number].items():
-                if value.casefold().strip() in {"amount", "amount (inr)", "amount (rs)", "total amount", "net amount"}:
+                if _normalized_label(value).replace("(", "").replace(")", "") in AMOUNT_HEADERS:
                     amount_columns.append(column)
                     header_row = row_number
             if amount_columns: break
@@ -87,17 +120,19 @@ def _adapter_fields(blocks: list[dict[str, Any]], document_type: str = "BILL") -
         for row_number in sorted(rows):
             if row_number <= header_row or amount_column not in rows[row_number]: continue
             row = rows[row_number]
-            description = " ".join(value for col, (value, _, _) in row.items() if col != amount_column).casefold()
-            if re.fullmatch(r"(?:grand total|sub ?total|total|invoice total|net total|amount paid|balance(?: due)?)[\s:.-]*", description.strip()) or any(term in description for term in ("round off", "rounding", "discount", "tax", "gst")):
-                # Adjustment rows require explicit normalization; do not guess.
-                if any(term in description for term in ("discount", "tax", "gst", "round off", "rounding")):
-                    value, words, cell = row[amount_column]
-                    fields.append({"name": "line_item_amount", "value": "UNRESOLVED ADJUSTMENT: " + value, "page": int(cell.get("Page", 1)), "blocks": words or [cell]})
-                continue
+            description = _normalized_label(" ".join(value for col, (value, _, _) in row.items() if col != amount_column))
             value, words, cell = row[amount_column]
+            # Repeated headers are common when a table continues on another page.
+            if _normalized_label(value).replace("(", "").replace(")", "") in AMOUNT_HEADERS:
+                continue
+            if SUMMARY_LABEL.fullmatch(description):
+                continue
+            if any(term in description for term in ADJUSTMENT_TERMS):
+                fields.append({"name": "invoice_adjustment", "value": _adjustment_value(description, value), "page": int(cell.get("Page", 1)), "blocks": words or [cell]})
+                continue
             if not value.strip(): continue
             fields.append({"name": "line_item_amount", "value": value, "page": int(cell.get("Page", 1)), "blocks": words or [cell]})
-            if any(term in description for term in ("implant", "procedure", "surgery", "mri", "ct scan", "replacement")):
+            if PROCEDURE_PATTERN.search(description):
                 fields.append({"name": "procedure_or_device_charge", "value": value, "page": int(cell.get("Page", 1)), "blocks": words or [cell]})
                 source_blocks = [b for _, row_words, row_cell in row.values() for b in (row_words or [row_cell])]
                 fields.append({"name": "billed_procedure", "value": description + ": " + value, "page": int(cell.get("Page", 1)), "blocks": source_blocks})
