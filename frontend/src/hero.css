@@ -37,6 +37,7 @@
   min-height: 100svh;
   color: var(--aero-ink);
   background: var(--aero-paper);
+  overflow: hidden;
 }
 .aero-header {
   position: absolute;
@@ -95,15 +96,23 @@
   background: #ffffffa3;
 }
 .aero-grid {
+  width: min(100%, 1600px);
+  margin: 0 auto;
+  padding: 112px clamp(24px, 4vw, 64px) 52px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  min-height: 100svh;
+  grid-template-columns: minmax(330px, 0.82fr) minmax(0, 1.18fr);
+  align-items: stretch;
+  gap: clamp(28px, 4vw, 68px);
+  min-height: min(820px, 100svh);
 }
 .aero-image-panel {
   position: relative;
-  min-height: 100svh;
+  min-height: 540px;
+  max-height: 680px;
   overflow: hidden;
+  border-radius: 32px;
   background: #6d7772;
+  box-shadow: 0 28px 70px #1220231f;
 }
 .aero-image-panel > img {
   width: 100%;
@@ -161,14 +170,15 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding-top: 84px;
+  justify-content: center;
+  padding-top: 0;
   background: var(--aero-paper);
 }
 .aero-copy {
   width: 100%;
   max-width: 760px;
-  margin: auto;
-  padding: clamp(48px, 7vw, 104px) clamp(28px, 5vw, 76px) 50px;
+  margin: 0;
+  padding: clamp(24px, 3vw, 48px) 0 34px;
 }
 .aero-kicker {
   display: inline-flex;
@@ -185,7 +195,7 @@
 }
 .aero-copy h1 {
   margin: 0;
-  font-size: clamp(2.8rem, 5vw, 5.6rem);
+  font-size: clamp(3rem, 4.6vw, 5rem);
   line-height: 0.98;
   font-weight: 500;
   letter-spacing: -0.065em;
@@ -345,7 +355,7 @@
   font-weight: 600;
 }
 .aero-services {
-  padding: 24px 0 27px;
+  padding: 22px 0 8px;
   border-top: 1px solid #12202317;
   overflow: hidden;
 }
@@ -353,7 +363,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 clamp(28px, 5vw, 76px) 18px;
+  padding: 0 0 18px;
   color: var(--aero-muted);
   font-size: 0.72rem;
 }
@@ -370,6 +380,208 @@
 .aero-marquee-mask {
   overflow: hidden;
   mask-image: linear-gradient(to right, transparent, black 9%, black 91%, transparent);
+}
+
+.aero-path {
+  width: min(calc(100% - 48px), 1472px);
+  margin: 0 auto 48px;
+  padding: clamp(50px, 7vw, 96px);
+  border-radius: 40px;
+  color: #f4f7ef;
+  background:
+    linear-gradient(#ffffff09 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff09 1px, transparent 1px), #122023;
+  background-size: 72px 72px;
+}
+.aero-path-heading {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.55fr) minmax(0, 1.45fr);
+  gap: 44px;
+  align-items: start;
+}
+.aero-path-heading .aero-kicker {
+  color: #dff7ad;
+}
+.aero-path-heading .aero-kicker svg {
+  color: currentColor;
+}
+.aero-path-heading h2 {
+  max-width: 780px;
+  margin: 0;
+  font-size: clamp(2.4rem, 4.5vw, 4.8rem);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+}
+.aero-path-heading p {
+  max-width: 710px;
+  margin: 24px 0 0;
+  color: #c0c9c5;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.aero-path-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: clamp(42px, 6vw, 72px);
+}
+.aero-step-card {
+  position: relative;
+  min-width: 0;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 3vw, 34px);
+  border: 1px solid #ffffff1c;
+  border-radius: 28px;
+  background: #f6f7f1;
+  color: #122023;
+  box-shadow: 0 24px 48px #07111138;
+}
+.aero-step-card:not(:last-child)::after {
+  content: '\2192';
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: -30px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 5px solid #122023;
+  border-radius: 50%;
+  color: #122023;
+  background: #e1fcad;
+  font-size: 1.25rem;
+  font-weight: 700;
+  transform: translateY(-50%);
+}
+.aero-step-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #62706b;
+}
+.aero-step-topline span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #425a24;
+  background: #e1fcad;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.aero-step-card h3 {
+  max-width: 290px;
+  margin: 44px 0 12px;
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  line-height: 1.06;
+  letter-spacing: -0.045em;
+}
+.aero-step-card > p {
+  margin: 0;
+  color: #66716f;
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+.aero-step-preview {
+  min-width: 0;
+  min-height: 58px;
+  margin-top: auto;
+  padding: 14px 16px;
+  border: 1px solid #12202314;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 12px 28px #12202310;
+}
+.aero-file-preview {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  color: #5d6866;
+  font-size: 0.78rem;
+}
+.aero-file-preview strong {
+  padding: 5px 7px;
+  border-radius: 7px;
+  color: #425a24;
+  background: #e1fcad;
+  font-size: 0.62rem;
+}
+.aero-evidence-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  font-size: 0.76rem;
+}
+.aero-evidence-preview span {
+  color: #5e6967;
+}
+.aero-evidence-preview i {
+  grid-column: 1 / -1;
+  color: #607b35;
+  font-size: 0.68rem;
+  font-style: normal;
+}
+.aero-decision-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.72rem;
+}
+.aero-decision-preview span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #35501a;
+  background: #e1fcad;
+}
+.aero-decision-preview strong {
+  color: #65706d;
+  font-size: 0.68rem;
+}
+.aero-proof-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 28px;
+  align-items: center;
+  margin-top: 22px;
+  padding: 26px 0 0;
+  border-top: 1px solid #ffffff1c;
+}
+.aero-proof-strip div strong,
+.aero-proof-strip div span {
+  display: block;
+}
+.aero-proof-strip div strong {
+  color: #e1fcad;
+  font-size: 0.78rem;
+}
+.aero-proof-strip div span {
+  margin-top: 5px;
+  color: #aeb9b5;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+.aero-proof-strip > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: #122023;
+  background: #e1fcad;
+  text-decoration: none;
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 .aero-marquee {
   width: max-content;
@@ -531,7 +743,8 @@
     height: 72px;
     padding-inline: 20px;
   }
-  .aero-header nav > button:not(.theme-toggle) {
+  .aero-header nav > button:not(.theme-toggle),
+  .aero-how-link {
     display: none;
   }
   .aero-header nav {
@@ -539,21 +752,53 @@
   }
   .aero-grid {
     grid-template-columns: 1fr;
+    gap: 26px;
+    padding: 96px 20px 40px;
   }
   .aero-image-panel {
-    min-height: 410px;
-    height: 48svh;
+    min-height: 360px;
+    height: 46svh;
+    order: 2;
+    border-radius: 26px;
   }
   .aero-copy-panel {
+    order: 1;
     padding-top: 0;
   }
   .aero-copy {
     margin: 0;
-    padding-top: 58px;
+    padding: 34px 0 24px;
+  }
+  .aero-path {
+    width: min(calc(100% - 40px), 1472px);
+    padding: 54px 28px;
+    border-radius: 30px;
+  }
+  .aero-path-heading {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .aero-path-grid {
+    grid-template-columns: 1fr;
+  }
+  .aero-step-card {
+    min-height: 300px;
+  }
+  .aero-step-card:not(:last-child)::after {
+    top: auto;
+    right: 50%;
+    bottom: -31px;
+    transform: translateX(50%) rotate(90deg);
+  }
+  .aero-proof-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .aero-proof-strip > a {
+    grid-column: 1 / -1;
   }
 }
 @media (max-width: 560px) {
-  .aero-header nav > a {
+  .aero-header nav > .aero-workspace-link {
     width: 42px;
     height: 42px;
     display: grid;
@@ -563,20 +808,20 @@
     border-radius: 50%;
     font-size: 0;
   }
-  .aero-header nav > a::after {
+  .aero-header nav > .aero-workspace-link::after {
     content: '↗';
     font-size: 1rem;
   }
   .aero-image-panel {
-    min-height: 335px;
-    height: 42svh;
+    min-height: 285px;
+    height: 36svh;
   }
   .aero-image-note {
     bottom: 20px;
     padding: 12px;
   }
   .aero-copy {
-    padding: 44px 22px 38px;
+    padding: 28px 2px 22px;
   }
   .aero-copy h1 {
     font-size: clamp(2.65rem, 13vw, 4rem);
@@ -592,7 +837,32 @@
     grid-column: 1 / -1;
   }
   .aero-services-heading {
-    padding-inline: 22px;
+    padding-inline: 0;
+  }
+  .aero-path {
+    width: calc(100% - 24px);
+    margin-bottom: 12px;
+    padding: 42px 16px 18px;
+    border-radius: 26px;
+  }
+  .aero-path-heading h2 {
+    font-size: clamp(2.3rem, 12vw, 3.5rem);
+  }
+  .aero-step-card {
+    min-height: 290px;
+    padding: 24px;
+    border-radius: 22px;
+  }
+  .aero-step-card h3 {
+    margin-top: 34px;
+  }
+  .aero-proof-strip {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 26px 8px 8px;
+  }
+  .aero-proof-strip > a {
+    grid-column: auto;
   }
 }
 @media (prefers-reduced-motion: reduce) {

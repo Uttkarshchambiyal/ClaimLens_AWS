@@ -32,8 +32,13 @@ describe('ClaimLens opening hero', () => {
     )
     await user.click(within(dialog).getByRole('button', { name: 'Close sample preview' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'How it works' }))
-    expect(screen.getByRole('dialog')).toBeVisible()
+    expect(screen.getByRole('link', { name: 'How it works' })).toHaveAttribute(
+      'href',
+      '#how-it-works',
+    )
+    expect(
+      screen.getByRole('heading', { name: /document packet to defensible decision/i }),
+    ).toBeVisible()
   })
 
   it('lets the reviewer pause the decorative animation', async () => {

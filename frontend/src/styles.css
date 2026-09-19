@@ -2175,13 +2175,13 @@ progress::-moz-progress-bar {
 .sidebar {
   width: 248px;
   padding: 28px 18px 0;
-  color: #f5f7f0;
-  background: #122023;
-  border-right: 0;
+  color: var(--foreground);
+  background: #ffffff;
+  border-right: 1px solid var(--border);
   backdrop-filter: none;
 }
 .brand {
-  color: #f5f7f0;
+  color: #122023;
 }
 .brand-mark {
   border: 0;
@@ -2194,15 +2194,15 @@ progress::-moz-progress-bar {
 .sidebar .nav-item,
 .sidebar-note,
 .profile small {
-  color: #bac3c0;
+  color: #687270;
 }
 .sidebar .nav-item {
   border-radius: 999px;
   padding: 11px 14px;
 }
 .sidebar .nav-item:hover {
-  color: white;
-  background: #ffffff0d;
+  color: #122023;
+  background: #f0f3ea;
 }
 .sidebar .nav-item.active {
   color: #122023;
@@ -2211,27 +2211,65 @@ progress::-moz-progress-bar {
 }
 .sidebar .nav-item b {
   color: inherit;
-  background: #ffffff14;
+  background: #1220230d;
 }
 .sidebar .nav-item.active b {
   background: #12202312;
 }
 .sidebar-note,
 .profile {
-  border-color: #ffffff1a;
+  border-color: var(--border);
 }
 .sidebar-note svg {
-  color: #e1fcad;
+  color: #607b35;
 }
 .sidebar-note strong,
 .profile strong {
-  color: #f5f7f0;
+  color: #122023;
 }
 .avatar {
   color: #122023;
   background: #e1fcad;
-  border: 0;
+  border: 1px solid #b9d97a;
   font-weight: 800;
+}
+.dark .sidebar {
+  color: #f5f7f0;
+  background: #122023;
+  border-right-color: #ffffff14;
+}
+.dark .sidebar .brand,
+.dark .sidebar .sidebar-note strong,
+.dark .sidebar .profile strong {
+  color: #f5f7f0;
+}
+.dark .sidebar .brand small,
+.dark .sidebar .workspace-label,
+.dark .sidebar .nav-item,
+.dark .sidebar .sidebar-note,
+.dark .sidebar .profile small {
+  color: #bac3c0;
+}
+.dark .sidebar .nav-item:hover {
+  color: white;
+  background: #ffffff0d;
+}
+.dark .sidebar .nav-item.active {
+  color: #122023;
+  background: #e1fcad;
+}
+.dark .sidebar .nav-item b {
+  background: #ffffff14;
+}
+.dark .sidebar .nav-item.active b {
+  background: #12202312;
+}
+.dark .sidebar .sidebar-note,
+.dark .sidebar .profile {
+  border-color: #ffffff1a;
+}
+.dark .sidebar .sidebar-note svg {
+  color: #e1fcad;
 }
 .app-content {
   grid-column: 2;
@@ -2443,7 +2481,9 @@ progress::-moz-progress-bar {
 progress::-webkit-progress-bar {
   background: #12202312;
 }
-progress::-webkit-progress-value,
+progress::-webkit-progress-value {
+  background: #607b35;
+}
 progress::-moz-progress-bar {
   background: #607b35;
 }
@@ -2546,6 +2586,25 @@ progress::-moz-progress-bar {
   border-color: var(--border);
   box-shadow: 0 20px 60px #12202324;
 }
+.findings-workspace,
+.review-columns,
+.finding-detail {
+  min-width: 0;
+  max-width: 100%;
+}
+.review-columns,
+.finding-detail {
+  overflow-x: clip;
+}
+.viewer-notice {
+  color: #50682d;
+  background: #f2fbdc;
+  border-color: #aeca746b;
+}
+.dark .viewer-notice {
+  color: #d9edb3;
+  background: #dff7ad12;
+}
 .document-stage {
   background: var(--document-stage);
 }
@@ -2601,12 +2660,19 @@ progress::-moz-progress-bar {
   .sidebar {
     width: 100%;
     padding-top: 14px;
-    background: #122023;
+    background: #ffffff;
   }
   .sidebar .nav-item.active {
+    color: #3f5b1c;
+    border-bottom-color: #607b35;
+    background: transparent;
+  }
+  .dark .sidebar {
+    background: #122023;
+  }
+  .dark .sidebar .nav-item.active {
     color: #e1fcad;
     border-bottom-color: #e1fcad;
-    background: transparent;
   }
   .topbar {
     position: sticky;

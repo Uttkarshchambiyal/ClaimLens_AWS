@@ -9,16 +9,19 @@ Parameters:
     Description: Bedrock model available in the deployment region
   AllowedOrigin:
     Type: String
-    Default: http://localhost:5173
+    Default: ''
+    Description: Optional custom frontend origin; defaults to the generated CloudFront URL
   TenantClaim:
     Type: String
     Default: custom:tenant_id
   CognitoCallbackUrl:
     Type: String
-    Default: http://localhost:5173/auth/callback
+    Default: ''
+    Description: Optional custom callback URL; defaults to the generated CloudFront URL
   CognitoLogoutUrl:
     Type: String
-    Default: http://localhost:5173/
+    Default: ''
+    Description: Optional custom logout URL; defaults to the generated CloudFront URL
   MoneyTolerancePaise:
     Type: Number
     Default: 100
@@ -50,9 +53,14 @@ Parameters:
     MaxValue: 100
     Description: Extracted values below this Textract confidence require human confirmation
 
+Conditions:
+  UseCustomAllowedOrigin: !Not [!Equals [!Ref AllowedOrigin, '']]
+  UseCustomCallbackUrl: !Not [!Equals [!Ref CognitoCallbackUrl, '']]
+  UseCustomLogoutUrl: !Not [!Equals [!Ref CognitoLogoutUrl, '']]
+
 Globals:
   Function:
-    Runtime: python3.12
+    Runtime: python3.11
     Architectures: [arm64]
     MemorySize: 512
     Timeout: 30
@@ -70,7 +78,10 @@ Globals:
         DATE_ORDER: !Ref DateOrder
         MIN_FIELD_CONFIDENCE: !Ref MinFieldConfidence
         RETENTION_DAYS: !Ref RetentionDays
-        ALLOWED_ORIGIN: !Ref AllowedOrigin
+        ALLOWED_ORIGIN: !If
+          - UseCustomAllowedOrigin
+          - !Ref AllowedOrigin
+          - !Sub 'https://${FrontendDistribution.DomainName}'
         USE_BEDROCK: 'true'
 
 Resources:
@@ -78,7 +89,11 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       CorsConfiguration:
-        AllowOrigins: [!Ref AllowedOrigin]
+        AllowOrigins:
+          - !If
+            - UseCustomAllowedOrigin
+            - !Ref AllowedOrigin
+            - !Sub 'https://${FrontendDistribution.DomainName}'
         AllowHeaders: [authorization, content-type, idempotency-key]
         AllowMethods: [GET, POST, PATCH, OPTIONS]
       Auth:
@@ -323,7 +338,11 @@ Resources:
         RestrictPublicBuckets: true
       CorsConfiguration:
         CorsRules:
-          - AllowedOrigins: [!Ref AllowedOrigin]
+          - AllowedOrigins:
+              - !If
+                - UseCustomAllowedOrigin
+                - !Ref AllowedOrigin
+                - !Sub 'https://${FrontendDistribution.DomainName}'
             AllowedMethods: [POST, GET, HEAD]
             AllowedHeaders: ['*']
             ExposedHeaders: [ETag, Content-Length, Content-Range, Accept-Ranges]
@@ -381,8 +400,16 @@ Resources:
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows: [code]
       AllowedOAuthScopes: [openid, email, profile]
-      CallbackURLs: [!Ref CognitoCallbackUrl]
-      LogoutURLs: [!Ref CognitoLogoutUrl]
+      CallbackURLs:
+        - !If
+          - UseCustomCallbackUrl
+          - !Ref CognitoCallbackUrl
+          - !Sub 'https://${FrontendDistribution.DomainName}/auth/callback'
+      LogoutURLs:
+        - !If
+          - UseCustomLogoutUrl
+          - !Ref CognitoLogoutUrl
+          - !Sub 'https://${FrontendDistribution.DomainName}/'
       SupportedIdentityProviders: [COGNITO]
       EnableTokenRevocation: true
       ReadAttributes: [email, name, 'custom:tenant_id']
@@ -394,6 +421,113 @@ Resources:
       UserPoolId: !Ref UserPool
       Domain: !Sub 'claimlens-${AWS::AccountId}-${AWS::Region}'
 
+  # --------------- Frontend Hosting (S3 + CloudFront) ---------------
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontOAC
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                'AWS:SourceArn': !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}'
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource: [!Sub '${FrontendBucket.Arn}', !Sub '${FrontendBucket.Arn}/*']
+            Condition: { Bool: { 'aws:SecureTransport': 'false' } }
+
+  FrontendOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub 'claimlens-frontend-oac-${AWS::StackName}'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub 'claimlens-security-headers-${AWS::StackName}'
+        SecurityHeadersConfig:
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 63072000
+            IncludeSubdomains: true
+            Override: true
+            Preload: true
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: DENY
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: strict-origin-when-cross-origin
+            Override: true
+          XSSProtection:
+            ModeBlock: true
+            Override: true
+            Protection: true
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        Comment: !Sub 'ClaimLens frontend — ${AWS::StackName}'
+        Origins:
+          - Id: FrontendS3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !Ref FrontendOAC
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: FrontendS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
+          ResponseHeadersPolicyId: !Ref FrontendResponseHeadersPolicy
+        # SPA routing: serve index.html for client-side routes
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 10
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 10
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
 Outputs:
   ApiUrl: { Value: !Sub 'https://${Api}.execute-api.${AWS::Region}.${AWS::URLSuffix}' }
   UserPoolId: { Value: !Ref UserPool }
@@ -402,3 +536,5 @@ Outputs:
   DocumentsBucketName: { Value: !Ref DocumentsBucket }
   RecordsTableName: { Value: !Ref RecordsTable }
   AnalysisStateMachineArn: { Value: !Ref AnalysisStateMachine }
+  FrontendUrl: { Value: !Sub 'https://${FrontendDistribution.DomainName}' }
+  FrontendBucketName: { Value: !Ref FrontendBucket }

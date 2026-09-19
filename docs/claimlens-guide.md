@@ -179,7 +179,7 @@ sam build
 sam validate --lint
 sam deploy --guided --region <region>
 ```
-SAM parameters include BedrockModelId, AllowedOrigin, CognitoCallbackUrl, CognitoLogoutUrl, MoneyTolerancePaise, StayDayAllowance, RoundingMode, DateOrder, RetentionDays and LogRetentionDays. Use DateOrder=ISO_ONLY unless numeric date convention is explicitly known. Configure frontend environment variables from stack outputs and rebuild; Vite variables are build-time values.
+SAM parameters include BedrockModelId, AllowedOrigin, CognitoCallbackUrl, CognitoLogoutUrl, MoneyTolerancePaise, StayDayAllowance, RoundingMode, DateOrder, RetentionDays and LogRetentionDays. Leave the origin, callback and logout parameters blank to use the generated CloudFront URL, or set them when using a custom domain. Use DateOrder=ISO_ONLY unless numeric date convention is explicitly known. Configure frontend environment variables from stack outputs and rebuild; Vite variables are build-time values.
 ### Mandatory live checks before calling it AWS-demo ready
 - Provision two Cognito reviewers in distinct tenants; verify login, refresh, logout and unauthorized record denial.
 - Upload a small synthetic bill, summary and report. Confirm S3 version pinning and HTTP 202 analysis ID, then inspect processing transitions to completion/warnings.

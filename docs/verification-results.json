@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-19T04:34:48.862346+00:00",
+  "checkedAt": "2026-09-19T07:45:02.694602+00:00",
   "scope": "Local tests, static validation, and mock browser acceptance only; no deployment or live cloud verification.",
   "checks": [
     {
@@ -15,7 +15,7 @@
     {
       "check": "backend_tests",
       "status": "PASS",
-      "output": ".................................................................        [100%]\n65 passed in 1.15s\n"
+      "output": ".................................................................        [100%]\n65 passed in 1.56s\n"
     },
     {
       "check": "quality_benchmark",
@@ -25,7 +25,7 @@
     {
       "check": "large_packet_benchmark",
       "status": "PASS",
-      "output": "{\n  \"checkedAt\": \"2026-09-19T04:34:38.824161+00:00\",\n  \"scope\": \"Local maximum-shape benchmark only; does not measure AWS service latency or quotas.\",\n  \"documents\": 10,\n  \"fields\": 120,\n  \"serializedFieldBytes\": 53783,\n  \"configuredFieldLimit\": 120,\n  \"configuredCombinedByteLimit\": 220000,\n  \"elapsedMs\": 3.302,\n  \"analysisStatus\": \"COMPLETED_WITH_WARNINGS\",\n  \"withinBounds\": true\n}\n"
+      "output": "{\n  \"checkedAt\": \"2026-09-19T07:44:52.550357+00:00\",\n  \"scope\": \"Local maximum-shape benchmark only; does not measure AWS service latency or quotas.\",\n  \"documents\": 10,\n  \"fields\": 120,\n  \"serializedFieldBytes\": 53783,\n  \"configuredFieldLimit\": 120,\n  \"configuredCombinedByteLimit\": 220000,\n  \"elapsedMs\": 3.32,\n  \"analysisStatus\": \"COMPLETED_WITH_WARNINGS\",\n  \"withinBounds\": true\n}\n"
     },
     {
       "check": "evaluation_artifact",
@@ -45,12 +45,12 @@
     {
       "check": "frontend_tests",
       "status": "PASS",
-      "output": "\n> claimlens-frontend@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.1 /Volumes/MY_HUB/AWS HACKATHONE/frontend\n\n\n Test Files  3 passed (3)\n      Tests  14 passed (14)\n   Start at  10:04:40\n   Duration  1.88s (environment 40%, tests 38%, setup 8%, transform 8%, import 6%)\n\n"
+      "output": "\n> claimlens-frontend@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.1 /Volumes/MY_HUB/AWS HACKATHONE/frontend\n\n\n Test Files  3 passed (3)\n      Tests  14 passed (14)\n   Start at  13:14:54\n   Duration  1.81s (environment 42%, tests 35%, transform 9%, setup 8%, import 6%)\n\n"
     },
     {
       "check": "production_build",
       "status": "PASS",
-      "output": "\n> claimlens-frontend@0.1.0 build\n> tsc -p tsconfig.app.json --noEmit && vite build\n\nvite v8.3.0 building client environment for production...\ntransforming...\n\u2713 1900 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                              0.57 kB \u2502 gzip:   0.35 kB\ndist/assets/pdf.worker.min-Dswkl-cV.mjs  1,265.41 kB\ndist/assets/index-DgA9qDn5.css              20.20 kB \u2502 gzip:   5.35 kB\ndist/assets/App-CZmWvPCA.css                43.68 kB \u2502 gzip:   8.90 kB\ndist/assets/App-B1D2Av7L.js                 49.64 kB \u2502 gzip:  14.74 kB\ndist/assets/index-BC3HBdqV.js              264.64 kB \u2502 gzip:  83.55 kB\ndist/assets/pdf-Ccc5rc_O.js                430.93 kB \u2502 gzip: 129.03 kB\n\n\u2713 built in 387ms\n"
+      "output": "\n> claimlens-frontend@0.1.0 build\n> tsc -p tsconfig.app.json --noEmit && vite build\n\nvite v8.3.0 building client environment for production...\ntransforming...\n\u2713 1900 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                              0.57 kB \u2502 gzip:   0.35 kB\ndist/assets/pdf.worker.min-Dswkl-cV.mjs  1,265.41 kB\ndist/assets/index-DzlwBidI.css              24.98 kB \u2502 gzip:   6.40 kB\ndist/assets/App-B3RflhCR.css                44.78 kB \u2502 gzip:   9.09 kB\ndist/assets/App-C3Ba3kBL.js                 49.64 kB \u2502 gzip:  14.74 kB\ndist/assets/index-CQOOF3cb.js              268.27 kB \u2502 gzip:  84.36 kB\ndist/assets/pdf-DT3Jiapy.js                430.93 kB \u2502 gzip: 129.03 kB\n\n\u2713 built in 377ms\n"
     },
     {
       "check": "formatting",

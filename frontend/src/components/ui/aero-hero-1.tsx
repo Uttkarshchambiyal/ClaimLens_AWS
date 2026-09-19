@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ArrowUpRight,
   Check,
+  ClipboardCheck,
   Cpu,
   Database,
+  FileUp,
   FileText,
   Layers3,
   LockKeyhole,
@@ -104,8 +106,12 @@ export default function HeroSection({ reviewHref = '/review', className }: HeroS
           ClaimLens
         </a>
         <nav aria-label="Site navigation">
-          <button onClick={() => setPreviewOpen(true)}>How it works</button>
-          <a href={reviewHref}>Open workspace</a>
+          <a className="aero-how-link" href="#how-it-works">
+            How it works
+          </a>
+          <a className="aero-workspace-link" href={reviewHref}>
+            Open workspace
+          </a>
           <ThemeToggle className="aero-theme-toggle" />
         </nav>
       </header>
@@ -216,6 +222,84 @@ export default function HeroSection({ reviewHref = '/review', className }: HeroS
           </section>
         </section>
       </main>
+
+      <section className="aero-path" id="how-it-works" aria-labelledby="review-path-title">
+        <div className="aero-path-heading">
+          <span className="aero-kicker">
+            <Workflow size={14} /> One clear review path
+          </span>
+          <div>
+            <h2 id="review-path-title">From document packet to defensible decision.</h2>
+            <p>
+              ClaimLens keeps extraction, evidence, and reviewer action connected—so every finding
+              can be understood and traced without leaving the workspace.
+            </p>
+          </div>
+        </div>
+
+        <div className="aero-path-grid">
+          <article className="aero-step-card">
+            <div className="aero-step-topline">
+              <span>Step 01</span>
+              <FileUp size={20} />
+            </div>
+            <h3>Upload the claim packet</h3>
+            <p>Add the bill, discharge summary, and supporting reports as one review packet.</p>
+            <div className="aero-step-preview aero-file-preview" aria-hidden="true">
+              <FileText size={17} />
+              <span>3 documents ready</span>
+              <strong>PDF</strong>
+            </div>
+          </article>
+
+          <article className="aero-step-card">
+            <div className="aero-step-topline">
+              <span>Step 02</span>
+              <ScanText size={20} />
+            </div>
+            <h3>Follow every finding</h3>
+            <p>Compare extracted values and open the exact document page behind each result.</p>
+            <div className="aero-step-preview aero-evidence-preview" aria-hidden="true">
+              <span>Invoice total</span>
+              <strong>Page 3</strong>
+              <i>98.4% confidence</i>
+            </div>
+          </article>
+
+          <article className="aero-step-card">
+            <div className="aero-step-topline">
+              <span>Step 03</span>
+              <ClipboardCheck size={20} />
+            </div>
+            <h3>Record the human decision</h3>
+            <p>Acknowledge, resolve, or request evidence while preserving the review trail.</p>
+            <div className="aero-step-preview aero-decision-preview" aria-hidden="true">
+              <span>
+                <Check size={14} /> Acknowledged
+              </span>
+              <strong>Reviewer controlled</strong>
+            </div>
+          </article>
+        </div>
+
+        <div className="aero-proof-strip">
+          <div>
+            <strong>Source-linked</strong>
+            <span>Document, page, and extracted value stay together.</span>
+          </div>
+          <div>
+            <strong>Evidence-aware</strong>
+            <span>Missing support is shown as a gap—not a verdict.</span>
+          </div>
+          <div>
+            <strong>Human-led</strong>
+            <span>ClaimLens assists review; it never approves or pays a claim.</span>
+          </div>
+          <a href={reviewHref}>
+            Open sample workspace <ArrowUpRight size={17} />
+          </a>
+        </div>
+      </section>
       {previewOpen && <SamplePreview reviewHref={reviewHref} close={() => setPreviewOpen(false)} />}
     </div>
   )

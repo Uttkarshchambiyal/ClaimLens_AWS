@@ -91,7 +91,7 @@ sam validate --lint
 sam deploy --guided --region <your-region>
 ```
 
-Set `BedrockModelId`, `AllowedOrigin`, `CognitoCallbackUrl`, `CognitoLogoutUrl`, `RetentionDays`, `LogRetentionDays`, and `MinFieldConfidence` for the chosen environment. Verify the selected model's regional availability. Cognito users are administrator-provisioned with an immutable `custom:tenant_id`; the browser cannot assign itself a tenant. The API requires an API-Gateway-validated ID token containing that tenant claim.
+Set `BedrockModelId`, `RetentionDays`, `LogRetentionDays`, and `MinFieldConfidence` for the chosen environment. `AllowedOrigin`, `CognitoCallbackUrl`, and `CognitoLogoutUrl` automatically use the generated CloudFront URL when left blank; set them only when using a custom domain. Verify the selected model's regional availability. Cognito users are administrator-provisioned with an immutable `custom:tenant_id`; the browser cannot assign itself a tenant. The API requires an API-Gateway-validated ID token containing that tenant claim.
 
 Frontend variables are in `frontend/.env.example`. Set `VITE_APP_MODE=production` and the deployed API/Cognito values for AWS use. Builds default to production unless mock mode is explicitly selected. Production never silently falls back to fabricated findings. For a deliberately labeled static demo, use `npm run build:demo`.
 
