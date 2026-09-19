@@ -83,7 +83,7 @@ Backend tests include real SDK serialization against **Moto-emulated** DynamoDB/
 
 ## AWS configuration and deployment
 
-`template.yaml` defines Python Lambda/API Gateway, private versioned S3, DynamoDB, Cognito, Step Functions Standard, Textract permissions, and bounded Bedrock comparison. Region and model remain configurable. Deployment has **not** been performed by this implementation pass.
+`template.yaml` defines Python Lambda/API Gateway, private versioned S3, DynamoDB, Cognito, Step Functions Standard, Textract permissions, bounded Bedrock comparison, and optional S3/CloudFront hosting. The hackathon stack is deployed in `ap-south-1` with CloudFront disabled because the new account is still awaiting CloudFront verification; Amplify Hosting serves the production frontend instead.
 
 ```bash
 sam build
@@ -91,7 +91,7 @@ sam validate --lint
 sam deploy --guided --region <your-region>
 ```
 
-Set `BedrockModelId`, `RetentionDays`, `LogRetentionDays`, and `MinFieldConfidence` for the chosen environment. `AllowedOrigin`, `CognitoCallbackUrl`, and `CognitoLogoutUrl` automatically use the generated CloudFront URL when left blank; set them only when using a custom domain. Verify the selected model's regional availability. Cognito users are administrator-provisioned with an immutable `custom:tenant_id`; the browser cannot assign itself a tenant. The API requires an API-Gateway-validated ID token containing that tenant claim.
+Set `BedrockModelId`, `RetentionDays`, `LogRetentionDays`, and `MinFieldConfidence` for the chosen environment. `AllowedOrigin`, `CognitoCallbackUrl`, and `CognitoLogoutUrl` automatically use the generated CloudFront URL when left blank. To use Amplify or another HTTPS host, deploy with `EnableCloudFront=false` and provide all three URL parameters. Verify the selected model's regional availability. Cognito users are administrator-provisioned with an immutable `custom:tenant_id`; the browser cannot assign itself a tenant. The API requires an API-Gateway-validated ID token containing that tenant claim.
 
 Frontend variables are in `frontend/.env.example`. Set `VITE_APP_MODE=production` and the deployed API/Cognito values for AWS use. Builds default to production unless mock mode is explicitly selected. Production never silently falls back to fabricated findings. For a deliberately labeled static demo, use `npm run build:demo`.
 
@@ -99,7 +99,7 @@ Configure the frontend host to serve `index.html` for `/review` and `/auth/callb
 
 ## AWS verification status
 
-**Not verified against AWS.** The local verifier currently stops because AWS CLI is not installed. No live region, IAM permissions, Textract extraction, Bedrock invocation, Cognito login, or deployed Step Functions execution was established.
+**Partially verified against AWS.** The stack is `UPDATE_COMPLETE` in `ap-south-1`, and the production frontend is live at [main.d32my0bksmpqr2.amplifyapp.com](https://main.d32my0bksmpqr2.amplifyapp.com). A tenant-scoped Cognito reviewer successfully completed hosted login, authorization-code callback, and a protected empty-queue API request with no browser errors. Lambda, API Gateway, Step Functions, S3, DynamoDB, Cognito, CloudWatch, and Amplify resources are deployed. Textract still returns `SubscriptionRequiredException`, and Bedrock invocation returns `Operation not allowed`; AWS account/model activation must complete before document analysis can pass.
 
 Once CLI credentials and your selected region/model are available:
 
@@ -107,7 +107,7 @@ Once CLI credentials and your selected region/model are available:
 AWS_REGION=<region> BEDROCK_MODEL_ID=<model-id> ./scripts/verify_aws.sh
 ```
 
-The script checks STS identity, probes Textract GetDocumentAnalysis, and sends a minimal synthetic Bedrock Converse request (which may incur usage charges). It does not create infrastructure. An invalid-job response proves API reachability only, not StartDocumentAnalysis permission. S3, DynamoDB, Step Functions, Cognito, and full extraction still need deployed integration tests.
+The script checks STS identity, probes Textract GetDocumentAnalysis, and sends a minimal synthetic Bedrock Converse request (which may incur usage charges). It reports subscription/account activation errors separately from IAM denial. An invalid-job response proves API reachability only, not StartDocumentAnalysis permission. Full S3 upload, Step Functions execution, Textract extraction, Bedrock comparison, source rendering, and cross-tenant denial still need deployed integration tests.
 
 ## Implemented safeguards and known limits
 
@@ -133,7 +133,7 @@ The [evaluation protocol](docs/evaluation.md) adds measurable rule precision/rec
 
 The [14-page project guide](output/pdf/claimlens-architecture-and-readiness.pdf) explains the website, AWS architecture, component responsibilities, evidence/record model, rules, model boundary, security, reliability, demo script, and live acceptance gate. Its editable source is [docs/claimlens-guide.md](docs/claimlens-guide.md).
 
-Current local results: **65 backend tests and 14 frontend tests pass**, along with the labeled quality benchmark, maximum-shape packet benchmark, eight-page evaluation-artifact validation, dependency consistency, Python compilation, production build, formatting, SAM lint, verifier syntax, and desktop/mobile Chromium acceptance. The eight evaluation pages and six application screenshots were visually inspected. Current npm and all three Python requirement audits report no known vulnerabilities. Live AWS and production signed-source verification remain outstanding. This is a synthetic local-demo prototype, not a certified AWS-live or production-ready medical system. Event-specific eligibility cannot be confirmed without the hackathon rules.
+Current local results: **65 backend tests and 14 frontend tests pass**, along with the labeled quality benchmark, maximum-shape packet benchmark, eight-page evaluation-artifact validation, dependency consistency, Python compilation, production build, formatting, SAM lint, verifier syntax, and desktop/mobile Chromium acceptance. The eight evaluation pages and six application screenshots were visually inspected. Current npm and all three Python requirement audits report no known vulnerabilities. AWS hosting, Cognito login, and a protected API read are verified; live Textract/Bedrock processing and production signed-source verification remain outstanding. This is a synthetic hackathon prototype, not a certified production-ready medical system. Event-specific eligibility cannot be confirmed without the hackathon rules.
 
 ```bash
 .venv/bin/python scripts/verify_project.py

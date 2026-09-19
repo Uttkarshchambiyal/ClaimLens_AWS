@@ -25,6 +25,10 @@ case "$TEXTRACT_RESULT" in
   *InvalidJobIdException*)
     echo "Textract GetDocumentAnalysis: reachable; start/extraction permissions remain unverified."
     ;;
+  *SubscriptionRequiredException*)
+    echo "Textract: SUBSCRIPTION_REQUIRED (finish AWS account/service activation)." >&2
+    exit 3
+    ;;
   *AccessDenied*|*Unauthorized*)
     echo "Textract: DENIED" >&2
     exit 3
@@ -35,10 +39,27 @@ case "$TEXTRACT_RESULT" in
     ;;
 esac
 
-aws bedrock-runtime converse --region "$VERIFY_REGION" --model-id "$VERIFY_MODEL" \
+BEDROCK_RESULT="$(aws bedrock-runtime converse --region "$VERIFY_REGION" --model-id "$VERIFY_MODEL" \
   --messages '[{"role":"user","content":[{"text":"Return only the word OK."}]}]' \
-  --inference-config '{"maxTokens":8,"temperature":0}' --output json > "$VERIFY_TMP/response.json"
-echo "Bedrock model invocation: verified"
+  --inference-config '{"maxTokens":8,"temperature":0}' --output json 2>&1 || true)"
+case "$BEDROCK_RESULT" in
+  *'"output"'*)
+    printf '%s\n' "$BEDROCK_RESULT" > "$VERIFY_TMP/response.json"
+    echo "Bedrock model invocation: verified"
+    ;;
+  *'currently being verified'*|*'Operation not allowed'*)
+    echo "Bedrock: ACCOUNT_OR_MODEL_ACCESS_PENDING." >&2
+    exit 3
+    ;;
+  *AccessDenied*|*Unauthorized*)
+    echo "Bedrock: DENIED" >&2
+    exit 3
+    ;;
+  *)
+    echo "Bedrock: UNVERIFIED (unexpected response)." >&2
+    exit 3
+    ;;
+esac
 
 echo "UNVERIFIED: S3, DynamoDB, Step Functions, Cognito, and Textract StartDocumentAnalysis permissions require deployed integration tests."
 echo "Template validation is not proof of data-plane permissions. Run 'sam validate --lint' before deployment."

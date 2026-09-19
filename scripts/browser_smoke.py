@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from contextlib import closing
+import os
 from pathlib import Path
 import re
 import socket
@@ -127,6 +128,7 @@ def main() -> int:
     process = subprocess.Popen(
         ["npm", "run", "dev", "--", "--port", str(port), "--strictPort"],
         cwd=FRONTEND,
+        env={**os.environ, "VITE_APP_MODE": "mock"},
         stdout=subprocess.DEVNULL,
         stderr=subprocess.STDOUT,
     )

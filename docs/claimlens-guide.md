@@ -7,14 +7,14 @@ ClaimLens is a human-in-the-loop document review prototype for an insurance clai
 ### Honest assessment
 | Area | Assessment |
 | Local demonstration | Prepared for a synthetic walkthrough. Automated interaction and business-rule checks pass. |
-| Live AWS demonstration | NOT VERIFIED. AWS CLI and SAM CLI are installed, but no AWS credentials or deployed stack are available yet. |
-| Browser appearance | VERIFIED for the explicit local mock flow in Chromium at desktop and mobile widths; six current screenshots were inspected. Production Cognito and signed-source rendering remain unverified. |
+| Live AWS demonstration | PARTIAL. The stack and Amplify frontend are deployed in ap-south-1; Cognito login and a protected API read pass. Textract and Bedrock remain blocked by AWS account activation. |
+| Browser appearance | VERIFIED for the explicit local mock flow at desktop/mobile widths and the production Cognito/empty-queue flow at desktop width. Signed-source rendering remains unverified. |
 | Hackathon eligibility | NOT VERIFIED. The event name, judging rubric, deadline and submission rules have not been supplied. |
 | Production medical use | NOT READY. Needs operational, privacy, security, extraction-accuracy and cloud acceptance work. |
 ### What you can confidently present
 A working synthetic reviewer journey, source-backed arithmetic and cross-document checks, a consistent paper-charcoal-lime interface, explicit uncertainty, strict citation validation, AWS SAM infrastructure and a reproducible test suite. Demonstrate the distinction between review priority, extraction quality and coverage.
 ### What not to claim
-Do not claim a deployed AWS solution, measured fraud-detection accuracy, insurance approval automation, clinical validity, regulatory compliance or proven OCR performance. No real medical records should be used for this hackathon prototype.
+Do not claim completed live document processing, measured fraud-detection accuracy, insurance approval automation, clinical validity, regulatory compliance or proven OCR performance. The AWS foundation is deployed, but Textract/Bedrock execution is not yet available. No real medical records should be used for this hackathon prototype.
 The assessment date and exact verification results appear in the footer and on the verification page. Passing local checks does not remove the cloud-readiness gate.
 
 ## 02 | Website and reviewer journey
@@ -150,7 +150,7 @@ App.tsx owns queue/review/activity state, selected analysis, status polling, sea
 | VITE_API_BASE_URL | Deployed HTTP API endpoint. |
 | VITE_COGNITO_* | Authority, client ID, redirect/logout URIs and hosted Cognito domain; see frontend/.env.example. |
 ### Implemented interaction safeguards
-The logo returns home, navigation restores URLs, screen searches do not leak into other views, review tabs support arrow/Home/End keys, source zoom can shrink the page, and failed correction saves retain input without hiding evidence. Dialog labels, focus rings, reduced-motion styling and responsive layouts are implemented. Chromium automation now covers the landing page, queue, review, source viewer and upload dialog at 1536x960 and 390x844; six screenshots were inspected. Download behavior, additional browser engines, production authentication, and real signed-source rendering still need deployed acceptance.
+The logo returns home, navigation restores URLs, screen searches do not leak into other views, review tabs support arrow/Home/End keys, source zoom can shrink the page, and failed correction saves retain input without hiding evidence. Dialog labels, focus rings, reduced-motion styling and responsive layouts are implemented. Chromium automation now covers the landing page, queue, review, source viewer and upload dialog at 1536x960 and 390x844; six screenshots were inspected. Production Cognito authentication and a protected API read pass. Download behavior, additional browser engines, token refresh/logout, cross-tenant denial, and real signed-source rendering still need deployed acceptance.
 
 ## 11 | Verification and audit findings
 :::verification
@@ -169,7 +169,7 @@ The supplied CI has not run on GitHub. SAM lint does not prove deployment or IAM
 ### Before deploying
 1. Install AWS CLI and SAM CLI, authenticate using an approved account/role, and select a region. Do not paste credentials into source code or this PDF.
 2. Verify a Converse-compatible Bedrock foundation model in that region. A model list alone does not establish invocation permission. Keep the chosen identifier configurable.
-3. Choose a static frontend host, enable HTTPS and SPA rewrites, and decide exact origin/callback/logout URLs. The current SAM stack does not host the frontend.
+3. Choose a static frontend host, enable HTTPS and SPA rewrites, and decide exact origin/callback/logout URLs. The SAM template can create S3/CloudFront hosting or accept an external HTTPS host such as Amplify.
 4. Set a spend budget and inspect IAM, Cognito tier, retention and service quotas. Use synthetic files only.
 ### Local and deployment commands
 ```text
@@ -179,7 +179,7 @@ sam build
 sam validate --lint
 sam deploy --guided --region <region>
 ```
-SAM parameters include BedrockModelId, AllowedOrigin, CognitoCallbackUrl, CognitoLogoutUrl, MoneyTolerancePaise, StayDayAllowance, RoundingMode, DateOrder, RetentionDays and LogRetentionDays. Leave the origin, callback and logout parameters blank to use the generated CloudFront URL, or set them when using a custom domain. Use DateOrder=ISO_ONLY unless numeric date convention is explicitly known. Configure frontend environment variables from stack outputs and rebuild; Vite variables are build-time values.
+SAM parameters include BedrockModelId, EnableCloudFront, AllowedOrigin, CognitoCallbackUrl, CognitoLogoutUrl, MoneyTolerancePaise, StayDayAllowance, RoundingMode, DateOrder, RetentionDays and LogRetentionDays. Leave the origin, callback and logout parameters blank to use generated CloudFront hosting. For Amplify or another HTTPS host, set EnableCloudFront=false and provide all three URLs. Use DateOrder=ISO_ONLY unless numeric date convention is explicitly known. Configure frontend environment variables from stack outputs and rebuild; Vite variables are build-time values.
 ### Mandatory live checks before calling it AWS-demo ready
 - Provision two Cognito reviewers in distinct tenants; verify login, refresh, logout and unauthorized record denial.
 - Upload a small synthetic bill, summary and report. Confirm S3 version pinning and HTTP 202 analysis ID, then inspect processing transitions to completion/warnings.
@@ -202,7 +202,7 @@ Run the local verification script, confirm its browser check, test the report bu
 ### Submission checklist
 Confirm event-specific AWS-service requirements, eligible region/account, team size, repository/license requirements, mandatory video length, judging criteria and submission deadline. Prepare a concise problem statement, working link, repository, architecture, synthetic-data statement, test evidence, limitations and cost notes. These rules cannot be confirmed until the hackathon is identified.
 ### Decision
-Use this project as a credible prototype submission only with an accurate status description. A local-demo submission can be rehearsed now, subject to visual checking. An AWS-live claim must wait until the live acceptance gate on the previous page is complete. Real medical use is out of scope.
+Use this project as a credible deployed prototype with an accurate status description: AWS hosting, authentication and protected API access are live, while Textract/Bedrock analysis remains activation-blocked. Do not describe it as a completed live document-processing system until the acceptance gate on the previous page passes. Real medical use is out of scope.
 
 ## 14 | Reference map and next priorities
 ### Code and artifacts to inspect

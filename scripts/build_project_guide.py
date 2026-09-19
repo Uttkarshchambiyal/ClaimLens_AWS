@@ -119,7 +119,7 @@ def main():
             story.extend([table(rows, compact=True), Spacer(1, 8)])
             browser = 'PASS' if report.get('browserSmokeVerified') else 'UNVERIFIED'
             visual = 'PASS' if report.get('browserVisualVerified') else 'UNVERIFIED'
-            story.append(p(f'Local browser workflow: {browser}. Manual screenshot review: {visual}. Live AWS services and signed-source behavior remain UNVERIFIED.'))
+            story.append(p(f'Local browser workflow: {browser}. Manual screenshot review: {visual}. Amplify hosting, Cognito login and a protected API read are live-verified; Textract, Bedrock and signed-source behavior remain unverified.'))
         elif line.startswith('|'):
             rows = [[value.strip() for value in line.strip('|').split('|')]]
             while index < len(source) and source[index].strip().startswith('|'):

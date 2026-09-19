@@ -7,6 +7,11 @@ Parameters:
     Type: String
     Default: amazon.nova-lite-v1:0
     Description: Bedrock model available in the deployment region
+  EnableCloudFront:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: Create S3 and CloudFront frontend hosting; disable when using Amplify or another HTTPS host
   AllowedOrigin:
     Type: String
     Default: ''
@@ -54,9 +59,20 @@ Parameters:
     Description: Extracted values below this Textract confidence require human confirmation
 
 Conditions:
+  CreateCloudFront: !Equals [!Ref EnableCloudFront, 'true']
   UseCustomAllowedOrigin: !Not [!Equals [!Ref AllowedOrigin, '']]
   UseCustomCallbackUrl: !Not [!Equals [!Ref CognitoCallbackUrl, '']]
   UseCustomLogoutUrl: !Not [!Equals [!Ref CognitoLogoutUrl, '']]
+
+Rules:
+  RequireExternalFrontendUrls:
+    RuleCondition: !Equals [!Ref EnableCloudFront, 'false']
+    Assertions:
+      - Assert: !And
+          - !Not [!Equals [!Ref AllowedOrigin, '']]
+          - !Not [!Equals [!Ref CognitoCallbackUrl, '']]
+          - !Not [!Equals [!Ref CognitoLogoutUrl, '']]
+        AssertDescription: AllowedOrigin and Cognito callback/logout URLs are required when CloudFront is disabled
 
 Globals:
   Function:
@@ -425,6 +441,7 @@ Resources:
 
   FrontendBucket:
     Type: AWS::S3::Bucket
+    Condition: CreateCloudFront
     Properties:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
@@ -437,6 +454,7 @@ Resources:
 
   FrontendBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: CreateCloudFront
     Properties:
       Bucket: !Ref FrontendBucket
       PolicyDocument:
@@ -460,6 +478,7 @@ Resources:
 
   FrontendOAC:
     Type: AWS::CloudFront::OriginAccessControl
+    Condition: CreateCloudFront
     Properties:
       OriginAccessControlConfig:
         Name: !Sub 'claimlens-frontend-oac-${AWS::StackName}'
@@ -469,6 +488,7 @@ Resources:
 
   FrontendResponseHeadersPolicy:
     Type: AWS::CloudFront::ResponseHeadersPolicy
+    Condition: CreateCloudFront
     Properties:
       ResponseHeadersPolicyConfig:
         Name: !Sub 'claimlens-security-headers-${AWS::StackName}'
@@ -493,6 +513,7 @@ Resources:
 
   FrontendDistribution:
     Type: AWS::CloudFront::Distribution
+    Condition: CreateCloudFront
     Properties:
       DistributionConfig:
         Enabled: true
@@ -536,5 +557,11 @@ Outputs:
   DocumentsBucketName: { Value: !Ref DocumentsBucket }
   RecordsTableName: { Value: !Ref RecordsTable }
   AnalysisStateMachineArn: { Value: !Ref AnalysisStateMachine }
-  FrontendUrl: { Value: !Sub 'https://${FrontendDistribution.DomainName}' }
-  FrontendBucketName: { Value: !Ref FrontendBucket }
+  FrontendUrl:
+    Value: !If
+      - CreateCloudFront
+      - !Sub 'https://${FrontendDistribution.DomainName}'
+      - !Ref AllowedOrigin
+  FrontendBucketName:
+    Condition: CreateCloudFront
+    Value: !Ref FrontendBucket
