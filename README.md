@@ -99,6 +99,12 @@ Frontend variables are in `frontend/.env.example`. Set `VITE_APP_MODE=production
 
 Configure the frontend host to serve `index.html` for `/review`, `/auth/login`, `/auth/signup`, and `/auth/callback`. Keep the configured callback host, scheme, and port consistent with Cognito.
 
+For the existing manual Amplify app, apply the committed HTTP 200 SPA rewrites with:
+
+```bash
+AMPLIFY_APP_ID=<app-id> CLAIMLENS_AWS_REGION=<region> ./scripts/configure_amplify_routes.sh
+```
+
 ## AWS verification status
 
 **Partially verified against AWS.** The stack is `UPDATE_COMPLETE` in `ap-south-1`, and the production frontend is live at [main.d32my0bksmpqr2.amplifyapp.com](https://main.d32my0bksmpqr2.amplifyapp.com). The first-party Cognito flow passes login, refresh, logout, self-registration, confirmation, private tenant-claim issuance, and a protected empty-queue API request. The temporary signup acceptance user was deleted. Lambda, API Gateway, Step Functions, S3, DynamoDB, Cognito, CloudWatch, and Amplify resources are deployed. Textract still returns `SubscriptionRequiredException`, and Bedrock invocation returns `Operation not allowed`; AWS account/model activation must complete before document analysis can pass.
