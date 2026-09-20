@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { appMode } from '@/appConfig'
+import { demoAnalysis } from '@/mockData'
 import { ShinyButton } from './shiny-button'
 
 /* ------------------------------------------------------------------ */
@@ -37,41 +38,58 @@ interface QuickAction {
 /* ------------------------------------------------------------------ */
 
 const MOCK_RESPONSES: Record<string, string> = {
-  help: `I can help you with:
+  help: `I can help you work through the current packet without making a coverage or fraud decision.
 
-• **Reviewing claims** – I'll highlight discrepancies and flag items needing attention
-• **Understanding findings** – Ask me about any specific finding or check result
-• **Document analysis** – I can explain extracted fields and confidence levels
-• **Workflow guidance** – I'll walk you through the review process step by step
+Ask for the review summary, invoice total, timeline, or missing evidence. I will give you the source document, page, and a reviewer next step.`,
 
-What would you like help with?`,
+  status: `Current review summary for CLM-20481:
 
-  status: `**Current Review Summary:**
+• 2 high-priority findings need attention.
+• 3 checks need reviewer follow-up, including one missing-evidence item.
+• 1 identity check passed.
 
-📋 4 claims in queue
-⚠️ 2 claims need review
-✅ 1 claim fully reviewed
-🔄 1 claim processing
+Start with the invoice-total and procedure-date findings. The packet is completed with warnings, so review remains required.`,
 
-The highest priority item is **CLM-20481** — invoice total reconciliation failed. Would you like me to walk you through that finding?`,
+  finding: `CLM-20481 – Invoice Total Reconciliation
 
-  finding: `**CLM-20481 – Invoice Total Reconciliation**
+The stated invoice total is ₹248,500.00 and the extracted line items sum to ₹241,500.00. The difference is ₹7,000.00.
 
-The itemized bill total (₹45,230.00) doesn't match the sum of line items (₹44,780.00). The ₹450 discrepancy is in the pharmacy section.
+Evidence: CityCare_itemized_bill.pdf, pages 2–3.
 
-**Evidence:** CityCare_itemized_bill.pdf, page 3, rows 12-15
-
-**Recommendation:** Check whether the pharmacy subtotal includes a rounding adjustment or missing line item. This is a deterministic finding — no AI interpretation involved.
+Recommendation: Check for an omitted line item, adjustment, or extraction error. This is a deterministic finding — no AI interpretation involved.
 
 Would you like me to check the discharge summary for related entries?`,
 
-  default: `I understand your question. In the current mock mode, I'm demonstrating the AI assistant experience. In production, I would use Amazon Bedrock to analyze your specific claim documents, cross-reference findings, and provide source-linked explanations.
+  default: `I can answer from the current synthetic packet when your question relates to a finding, document, date, amount, or missing evidence. Try “Explain the invoice total” or “What evidence is missing?”
 
-Is there something specific about the review workflow I can help you with?`,
+This demo assistant is informational only: it does not approve, reject, or adjudicate claims.`,
 }
 
 function getMockResponse(input: string): string {
   const lower = input.toLowerCase()
+  const total = demoAnalysis.findings.find(
+    (finding) => finding.checkId === 'bill.total_reconciliation',
+  )
+  const timeline = demoAnalysis.findings.find((finding) => finding.checkId === 'packet.timeline')
+  const missing = demoAnalysis.findings.find(
+    (finding) => finding.checkId === 'packet.supporting_evidence',
+  )
+  const cite = (finding: typeof total) =>
+    finding?.evidence.map((item) => `${item.documentName}, page ${item.page}`).join('; ')
+  if (
+    lower.includes('invoice') ||
+    lower.includes('total') ||
+    lower.includes('amount') ||
+    lower.includes('reconcil') ||
+    lower.includes('discrepancy')
+  )
+    return `${total?.title}\n\n${total?.summary}\n\nEvidence: ${cite(total)}.\n\nNext step: open both citations and check for an omitted line item, adjustment, or extraction error. This is a reconciliation check, not a decision about claim validity.`
+  if (lower.includes('date') || lower.includes('timeline') || lower.includes('procedure'))
+    return `${timeline?.title}\n\n${timeline?.summary}\n\nEvidence: ${cite(timeline)}.\n\nNext step: verify the source dates and determine whether a documented exception explains the sequence before recording a disposition.`
+  if (lower.includes('missing') || lower.includes('evidence') || lower.includes('implant'))
+    return `${missing?.title}\n\n${missing?.summary}\n\nEvidence: ${cite(missing)}.\n\nNext step: ${missing?.requestedEvidence} Do not treat the missing document as proof that the service did not occur.`
+  if (lower.includes('finding') || lower.includes('priority'))
+    return `Top findings for ${demoAnalysis.claimId}:\n\n• ${total?.title}: ${total?.summary}\n• ${timeline?.title}: ${timeline?.summary}\n\nReview the cited source pages before acknowledging or resolving either item.`
   if (lower.includes('help') || lower.includes('what can')) return MOCK_RESPONSES.help
   if (lower.includes('status') || lower.includes('summary') || lower.includes('queue'))
     return MOCK_RESPONSES.status
@@ -83,6 +101,16 @@ function getMockResponse(input: string): string {
   )
     return MOCK_RESPONSES.finding
   return MOCK_RESPONSES.default
+}
+
+function MessageContent({ content }: { content: string }) {
+  return (
+    <div className="space-y-2 whitespace-pre-line break-words">
+      {content.split('\n\n').map((paragraph, index) => (
+        <p key={index}>{paragraph}</p>
+      ))}
+    </div>
+  )
 }
 
 /* ------------------------------------------------------------------ */
@@ -117,7 +145,10 @@ export function AIAgentWidget() {
     {
       id: 'welcome',
       role: 'assistant',
-      content: `Hi! I'm your ClaimLens AI assistant${appMode === 'mock' ? ' (mock mode)' : ''}. I can help you navigate findings, understand discrepancies, and guide your review workflow. What would you like to know?`,
+      content:
+        appMode === 'mock'
+          ? 'Hi! I’m your ClaimLens demo assistant. I can explain the current packet’s findings and point you to evidence. What would you like to review?'
+          : 'The live assistant is not connected in this build. I cannot safely answer from claim documents until a source-grounded endpoint is enabled.',
       timestamp: new Date(),
     },
   ])
@@ -140,6 +171,12 @@ export function AIAgentWidget() {
     }
   }, [isOpen])
 
+  useEffect(() => {
+    const openAssistant = () => setIsOpen(true)
+    window.addEventListener('claimlens:open-assistant', openAssistant)
+    return () => window.removeEventListener('claimlens:open-assistant', openAssistant)
+  }, [])
+
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || isTyping) return
@@ -155,13 +192,16 @@ export function AIAgentWidget() {
       setInput('')
       setIsTyping(true)
 
-      // Simulate AI thinking delay
-      await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 1200))
+      // Keep the demo responsive without pretending that an external model was called.
+      await new Promise((resolve) => setTimeout(resolve, 350))
 
       const aiMessage: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: getMockResponse(text),
+        content:
+          appMode === 'mock'
+            ? getMockResponse(text)
+            : 'The live assistant is not connected in this build, so I cannot safely answer from claim documents. Use the cited findings and source viewer, or connect a source-grounded assistant endpoint before enabling this chat.',
         timestamp: new Date(),
       }
 
@@ -198,7 +238,7 @@ export function AIAgentWidget() {
           className={cn(
             'fixed bottom-6 right-6 z-[9999]',
             'flex flex-col',
-            'w-[380px] max-h-[600px] h-[600px]',
+            'w-[calc(100vw-2rem)] sm:w-[380px] max-h-[min(600px,calc(100dvh-2rem))] h-[min(600px,calc(100dvh-2rem))]',
             'rounded-2xl shadow-2xl',
             'overflow-hidden',
           )}
@@ -228,9 +268,7 @@ export function AIAgentWidget() {
               <div>
                 <h3 className="text-sm font-semibold">ClaimLens AI</h3>
                 <p className="text-[10px]" style={{ opacity: 0.6 }}>
-                  {appMode === 'mock'
-                    ? 'Mock mode · No AWS calls'
-                    : 'Powered by Amazon Bedrock'}
+                  {appMode === 'mock' ? 'Mock mode · No AWS calls' : 'Live assistant unavailable'}
                 </p>
               </div>
             </div>
@@ -285,15 +323,7 @@ export function AIAgentWidget() {
                         }
                   }
                 >
-                  <div
-                    className="[&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:my-1 [&_p]:my-1"
-                    dangerouslySetInnerHTML={{
-                      __html: message.content
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\n/g, '<br/>')
-                        .replace(/• /g, '&bull; '),
-                    }}
-                  />
+                  <MessageContent content={message.content} />
                   <p
                     className="text-[10px] mt-1"
                     style={{

@@ -4,6 +4,7 @@ import {
   Activity as ActivityIcon,
   ArrowDownToLine,
   ArrowRight,
+  Bot,
   Check,
   CheckCheck,
   ChevronDown,
@@ -240,7 +241,8 @@ export function App() {
       if (request === sequence.current) {
         let msg = e instanceof Error ? e.message : 'Unable to load your review workspace.'
         if (msg.includes('Failed to fetch')) {
-          msg = 'Failed to connect to the backend API. If you are running locally, ensure your API Gateway CORS settings allow localhost, or switch VITE_APP_MODE to mock in .env.'
+          msg =
+            'Failed to connect to the backend API. If you are running locally, ensure your API Gateway CORS settings allow localhost, or switch VITE_APP_MODE to mock in .env.'
         }
         setError(msg)
       }
@@ -574,6 +576,14 @@ export function App() {
               </p>
             </div>
             <div className="heading-actions">
+              <button
+                className="button secondary"
+                onClick={() => window.dispatchEvent(new Event('claimlens:open-assistant'))}
+                aria-label="Open ClaimLens AI assistant"
+              >
+                <Bot size={17} />
+                Ask ClaimLens
+              </button>
               {view === 'workspace' && (
                 <button
                   className="button secondary"
