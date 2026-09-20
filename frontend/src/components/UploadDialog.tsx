@@ -44,6 +44,7 @@ export function UploadDialog({
     }
     setBusy(true)
     setError('')
+    setProgress(undefined)
     try {
       await onStart(files, key.current, setProgress)
       onClose()
@@ -157,14 +158,17 @@ export function UploadDialog({
           {error}
         </p>
       )}
-      {progress && busy && (
-        <div className="upload-progress" role="status">
-          <span>{progress.step}</span>
+      {progress && (
+        <div className={'upload-progress ' + (error ? 'upload-progress-failed' : '')} role="status">
+          <span>{error ? `Stopped while ${progress.step.toLowerCase()}` : progress.step}</span>
           <progress
             max={progress.total}
             value={progress.completed}
             aria-label="Packet upload progress"
           />
+          {error && (
+            <small>Your uploaded files remain private. Retry safely with the same packet.</small>
+          )}
         </div>
       )}
       <div className="dialog-actions">

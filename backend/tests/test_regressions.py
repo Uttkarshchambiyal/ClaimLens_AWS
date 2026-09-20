@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from claimlens.api import _actor, _analysis_view, _response, _tenant, handler
+from claimlens.api import StepFunctionsOrchestrator, _actor, _analysis_view, _response, _tenant, handler
 from claimlens.config import Settings
 from claimlens.extraction import make_evidence
 from claimlens.models import CheckStatus
@@ -18,6 +18,13 @@ from conftest import field
 def test_api_preserves_fractional_coordinates_and_confidence():
     result = json.loads(_response(200, {"left": Decimal("0.61"), "confidence": Decimal("98.4"), "paise": Decimal("125000")})["body"])
     assert result == {"left": .61, "confidence": 98.4, "paise": 125000}
+
+
+def test_step_function_payload_serializes_dynamodb_decimals():
+    client = SimpleNamespace(start_execution=lambda **kwargs: setattr(client, "request", kwargs))
+    orchestrator = StepFunctionsOrchestrator(client, "state-machine")
+    orchestrator.start("anl_123", {"version": Decimal("1"), "confidence": Decimal("98.4")})
+    assert json.loads(client.request["input"]) == {"version": 1, "confidence": 98.4}
 
 
 def test_dynamodb_decimal_amounts_are_reconciled(consistent_fields):

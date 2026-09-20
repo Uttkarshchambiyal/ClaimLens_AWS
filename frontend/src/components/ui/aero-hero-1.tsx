@@ -117,17 +117,31 @@ export default function HeroSection({
   const [viewerName, setViewerName] = useState('Reviewer')
   useEffect(() => {
     let active = true
-    void getOptionalUser().then((user) => {
-      if (!active) return
-      if (user) {
-        setViewerName(firstName(user))
-        setSession('signed-in')
-      } else {
-        setSession('guest')
-      }
-    })
+    const refreshSession = () => {
+      void getOptionalUser().then((user) => {
+        if (!active) return
+        if (user) {
+          setViewerName(firstName(user))
+          setSession('signed-in')
+        } else {
+          setSession('guest')
+        }
+      })
+    }
+    const refreshVisibleSession = () => {
+      if (document.visibilityState === 'visible') refreshSession()
+    }
+    refreshSession()
+    window.addEventListener('pageshow', refreshSession)
+    window.addEventListener('focus', refreshSession)
+    window.addEventListener('claimlens:auth-changed', refreshSession)
+    document.addEventListener('visibilitychange', refreshVisibleSession)
     return () => {
       active = false
+      window.removeEventListener('pageshow', refreshSession)
+      window.removeEventListener('focus', refreshSession)
+      window.removeEventListener('claimlens:auth-changed', refreshSession)
+      document.removeEventListener('visibilitychange', refreshVisibleSession)
     }
   }, [])
   return (

@@ -47,6 +47,13 @@
   --backdrop-faint: #f0f3ea;
   --document-stage: #e5e8e1;
   --document-sheet: #ffffff;
+  --chart-grid: #12202318;
+  --chart-axis: #687270;
+  --chart-1: #607b35;
+  --chart-2: #9d431d;
+  --chart-3: #b58a26;
+  --chart-4: #237450;
+  --chart-5: #8a9390;
   --interactive-glow: transparent;
   --interactive-vignette: transparent;
 }
@@ -87,6 +94,13 @@
   --backdrop-faint: #141d1b;
   --document-stage: #0b1110;
   --document-sheet: #ffffff;
+  --chart-grid: #ffffff18;
+  --chart-axis: #9da7a4;
+  --chart-1: #c5e38f;
+  --chart-2: #f1a87d;
+  --chart-3: #e4c46c;
+  --chart-4: #8bd6ad;
+  --chart-5: #9da7a4;
 }
 * {
   box-sizing: border-box;
@@ -133,6 +147,10 @@ summary:focus-visible {
 }
 input,
 select {
+  color-scheme: light;
+}
+.dark input,
+.dark select {
   color-scheme: dark;
 }
 select option {
