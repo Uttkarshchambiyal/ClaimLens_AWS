@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { appMode } from '@/appConfig'
+import { askAssistant } from '@/api'
 import { demoAnalysis } from '@/mockData'
 import { ShinyButton } from './shiny-button'
 
@@ -148,7 +149,7 @@ export function AIAgentWidget() {
       content:
         appMode === 'mock'
           ? 'Hi! I’m your ClaimLens demo assistant. I can explain the current packet’s findings and point you to evidence. What would you like to review?'
-          : 'The live assistant is not connected in this build. I cannot safely answer from claim documents until a source-grounded endpoint is enabled.',
+          : 'Hi! I can summarize the current review and point you to its cited evidence. What would you like to inspect?',
       timestamp: new Date(),
     },
   ])
@@ -192,21 +193,38 @@ export function AIAgentWidget() {
       setInput('')
       setIsTyping(true)
 
-      // Keep the demo responsive without pretending that an external model was called.
-      await new Promise((resolve) => setTimeout(resolve, 350))
-
-      const aiMessage: Message = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content:
+      try {
+        const content =
           appMode === 'mock'
-            ? getMockResponse(text)
-            : 'The live assistant is not connected in this build, so I cannot safely answer from claim documents. Use the cited findings and source viewer, or connect a source-grounded assistant endpoint before enabling this chat.',
-        timestamp: new Date(),
+            ? await new Promise<string>((resolve) =>
+                setTimeout(() => resolve(getMockResponse(text)), 350),
+              )
+            : (
+                await askAssistant(
+                  text,
+                  new URLSearchParams(window.location.search).get('analysis') || undefined,
+                )
+              ).answer
+        setMessages((prev) => [
+          ...prev,
+          { id: crypto.randomUUID(), role: 'assistant', content, timestamp: new Date() },
+        ])
+      } catch (error) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content:
+              error instanceof Error
+                ? `I could not load the review context: ${error.message}`
+                : 'I could not load the review context. Please retry.',
+            timestamp: new Date(),
+          },
+        ])
+      } finally {
+        setIsTyping(false)
       }
-
-      setMessages((prev) => [...prev, aiMessage])
-      setIsTyping(false)
     },
     [isTyping],
   )
@@ -220,13 +238,14 @@ export function AIAgentWidget() {
     <>
       {/* Floating trigger button */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
           <ShinyButton
-            className="flex items-center gap-2 shadow-xl shadow-black/20"
+            compact
+            className="flex items-center gap-1.5 shadow-xl shadow-black/20"
             onClick={() => setIsOpen(true)}
             aria-label="Open ClaimLens AI Assistant"
           >
-            <Sparkles size={20} />
+            <Sparkles size={16} />
             <span>Ask ClaimLens</span>
           </ShinyButton>
         </div>

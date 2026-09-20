@@ -148,6 +148,7 @@ Resources:
         UpdateFinding: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/analyses/{analysisId}/findings/{findingId}', Method: PATCH } }
         CorrectExtraction: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/analyses/{analysisId}/corrections', Method: PATCH } }
         GetReport: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: '/analyses/{analysisId}/report', Method: GET } }
+        AssistantChat: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: /assistant/chat, Method: POST } }
 
   StartExtractionFunction:
     Type: AWS::Serverless::Function

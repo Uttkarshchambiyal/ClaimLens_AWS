@@ -101,6 +101,44 @@ def _analysis_view(repo, tenant: str, analysis: dict[str, Any]) -> dict[str, Any
     }
 
 
+def _assistant_reply(repo, tenant: str, message: str, analysis_id: str | None) -> dict[str, Any]:
+    """Return a deterministic, evidence-linked reviewer aid without using document text as instructions."""
+    message_words = set(re.findall(r"[a-z0-9]{3,}", message.lower()))
+    analyses = sorted(repo.list_for_tenant(tenant, "ANALYSIS"), key=lambda row: row["createdAt"], reverse=True)
+    if analysis_id:
+        analysis = repo.get_for_tenant(tenant, "ANALYSIS", analysis_id)
+    elif analyses:
+        analysis = analyses[0]
+    else:
+        return {
+            "answer": "There are no claim packets in this workspace yet. Upload a packet to review its findings and evidence.",
+            "sources": [],
+        }
+
+    view = _analysis_view(repo, tenant, analysis)
+    findings = [item for item in view["findings"] if item["status"] != "PASS"]
+    matched = [
+        item for item in findings
+        if message_words.intersection(set(re.findall(r"[a-z0-9]{3,}", (item["title"] + " " + item["summary"]).lower())))
+    ]
+    selected = (matched or findings)[:2]
+    if not selected:
+        return {
+            "answer": f"{view['claimId']} has no open review findings. Inspect the source documents before recording a final reviewer action.",
+            "sources": [],
+        }
+    sources = [
+        {"documentName": evidence["documentName"], "page": evidence["page"], "excerpt": evidence["excerpt"]}
+        for finding in selected for evidence in finding["evidence"]
+    ][:4]
+    detail = "\n".join(f"• {item['title']}: {item['summary']}" for item in selected)
+    citations = "; ".join(f"{item['documentName']}, page {item['page']}" for item in sources)
+    return {
+        "answer": f"Review context for {view['claimId']}:\n\n{detail}\n\nEvidence: {citations or 'No source citation is available.'}\n\nUse the source viewer to verify the cited fields before acknowledging or resolving a finding. ClaimLens does not approve, deny, or adjudicate claims.",
+        "sources": sources,
+    }
+
+
 def handler(event, _context):
     settings = Settings()
     try:
@@ -110,10 +148,19 @@ def handler(event, _context):
         path = event.get("rawPath", event.get("path", ""))
         params = event.get("pathParameters") or {}
         idem = (event.get("headers") or {}).get("idempotency-key") or (event.get("headers") or {}).get("Idempotency-Key")
-        if method in {"POST", "PATCH"} and not idem:
+        if method in {"POST", "PATCH"} and path != "/assistant/chat" and not idem:
             return _response(400, {"error": "IDEMPOTENCY_KEY_REQUIRED"})
         if idem and (not isinstance(idem, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", idem)):
             raise ValueError("Invalid idempotency key")
+        if method == "POST" and path == "/assistant/chat":
+            data = _body(event)
+            message = data.get("message")
+            analysis_id = data.get("analysisId")
+            if not isinstance(message, str) or not message.strip() or len(message) > 2000:
+                raise ValueError("Message must be between 1 and 2000 characters")
+            if analysis_id is not None and (not isinstance(analysis_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", analysis_id)):
+                raise ValueError("Invalid analysis identifier")
+            return _response(200, _assistant_reply(repo, tenant, message, analysis_id))
         if method == "POST" and path == "/claims":
             return _response(201, service.create_claim(tenant, idem))
         if method == "POST" and path.endswith("/documents/upload-request"):

@@ -165,3 +165,12 @@ export async function getDocumentSource(
     token,
   )
 }
+
+export interface AssistantReply {
+  answer: string
+  sources: Array<{ documentName: string; page: number; excerpt: string }>
+}
+
+export async function askAssistant(message: string, analysisId?: string): Promise<AssistantReply> {
+  return request('/assistant/chat', undefined, 'POST', { message, analysisId }, crypto.randomUUID())
+}
