@@ -374,6 +374,27 @@ export default function HeroSection({
           </a>
         </div>
       </section>
+      <footer className="aero-footer">
+        <a href="/" className="aero-footer-brand" aria-label="ClaimLens home">
+          <span>
+            <ShieldCheck size={16} />
+          </span>
+          ClaimLens
+        </a>
+        <p>Synthetic claim-review prototype · Human decisions stay in reviewer control.</p>
+        <nav aria-label="Footer navigation">
+          <a href="#how-it-works" aria-label="Footer: How it works">
+            How it works
+          </a>
+          <a href={loginHref} aria-label="Footer: Log in">
+            Log in
+          </a>
+          <a href={reviewHref} aria-label="Footer: Workspace">
+            Workspace
+          </a>
+        </nav>
+        <small>© 2026 ClaimLens</small>
+      </footer>
       {previewOpen && <SamplePreview reviewHref={reviewHref} close={() => setPreviewOpen(false)} />}
     </div>
   )
