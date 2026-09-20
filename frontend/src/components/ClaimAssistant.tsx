@@ -7,7 +7,8 @@ import { AIAgentWidget } from './ui/ai-agent-widget'
  * available on every workspace page after navigation, but not on the hero.
  */
 export function ClaimAssistant() {
-  if ((window.location.pathname.replace(/\/+$/, '') || '/') === '/') return null
+  const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
+  if (pathname === '/' || pathname === '/sample') return null
   return <AIAgentWidget />
 }
 

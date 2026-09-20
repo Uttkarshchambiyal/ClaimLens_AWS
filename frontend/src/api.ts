@@ -1,9 +1,9 @@
 import { demoCorrect, demoGet, demoList, demoUpdate, demoUpload } from './demoStore'
-import { appMode, isValidAppMode } from './appConfig'
+import { appMode, isValidAppMode, usesLocalDemo } from './appConfig'
 import { requireUser } from './auth'
 import type { Analysis, Finding, UploadFile, UploadProgress } from './types'
 
-export { appMode } from './appConfig'
+export { appMode, usesLocalDemo } from './appConfig'
 const apiBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
 
 async function request<T>(
@@ -45,11 +45,11 @@ async function request<T>(
   return response.json()
 }
 export async function listAnalyses(token?: string): Promise<Analysis[]> {
-  if (appMode === 'mock') return demoList()
+  if (usesLocalDemo) return demoList()
   return (await request<{ analyses: Analysis[] }>('/analyses', token)).analyses
 }
 export async function getAnalysis(id: string, token?: string): Promise<Analysis> {
-  if (appMode === 'mock') return demoGet(id)
+  if (usesLocalDemo) return demoGet(id)
   return request('/analyses/' + encodeURIComponent(id), token)
 }
 export async function updateFinding(
@@ -58,7 +58,7 @@ export async function updateFinding(
   action: Finding['reviewerAction'],
   token?: string,
 ) {
-  if (appMode === 'mock') return demoUpdate(id, findingId, action)
+  if (usesLocalDemo) return demoUpdate(id, findingId, action)
   return request(
     '/analyses/' + encodeURIComponent(id) + '/findings/' + encodeURIComponent(findingId),
     token,
@@ -88,7 +88,7 @@ export async function createAnalysis(
 ) {
   const invalid = validateUploads(files)
   if (invalid) throw new Error(invalid)
-  if (appMode === 'mock') return demoUpload(files, key)
+  if (usesLocalDemo) return demoUpload(files, key)
   onProgress({ step: 'Creating claim', completed: 0, total: files.length + 2 })
   const claim = await request<{ claimId: string }>('/claims', token, 'POST', {}, key)
   const documentIds: string[] = []
@@ -133,7 +133,7 @@ export async function correctExtraction(
   correctedValue: string,
   token?: string,
 ) {
-  if (appMode === 'mock') return demoCorrect(id, fieldId, correctedValue)
+  if (usesLocalDemo) return demoCorrect(id, fieldId, correctedValue)
   return request(
     '/analyses/' + encodeURIComponent(id) + '/corrections',
     token,
@@ -143,7 +143,7 @@ export async function correctExtraction(
   )
 }
 export async function getReport(id: string, token?: string) {
-  if (appMode === 'mock') {
+  if (usesLocalDemo) {
     const analysis = demoGet(id)
     return {
       mode: 'MOCK — synthetic data',

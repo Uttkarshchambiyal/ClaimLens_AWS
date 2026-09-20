@@ -36,6 +36,7 @@ import {
   getReport,
   listAnalyses,
   updateFinding,
+  usesLocalDemo,
 } from './api'
 import { requireUser, signOut } from './auth'
 import { UploadDialog } from './components/UploadDialog'
@@ -183,7 +184,7 @@ function HelpDialog({ close }: { close: () => void }) {
           Corrections preserve the original extraction. They are annotations and do not yet trigger
           a new analysis.
         </div>
-        {appMode === 'mock' && (
+        {usesLocalDemo && (
           <p className="muted">
             The sample packets use fictional data. Demo changes are stored only for this browser
             tab’s session. No AWS services are invoked.
@@ -207,7 +208,7 @@ export function App() {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [token, setToken] = useState<string>()
-  const [reviewer, setReviewer] = useState(appMode === 'mock' ? 'Demo reviewer' : 'Claims reviewer')
+  const [reviewer, setReviewer] = useState(usesLocalDemo ? 'Demo reviewer' : 'Claims reviewer')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -219,8 +220,8 @@ export function App() {
     setLoading(true)
     setError('')
     try {
-      const user = await requireUser()
-      if (appMode === 'production' && !user) return
+      const user = usesLocalDemo ? null : await requireUser()
+      if (appMode === 'production' && !usesLocalDemo && !user) return
       const jwt = user?.id_token
       setToken(jwt)
       if (user) setReviewer(String(user.profile.name || user.profile.email || 'Claims reviewer'))
@@ -228,7 +229,7 @@ export function App() {
       const requested = new URLSearchParams(window.location.search).get('analysis')
       const initial = requested
         ? await getAnalysis(requested, jwt)
-        : appMode === 'mock'
+        : usesLocalDemo
           ? records[0]
           : null
       if (request !== sequence.current) return
@@ -366,7 +367,7 @@ export function App() {
     await refreshRecord(result.analysisId)
     await selectAnalysis(result.analysisId)
     setNotice(
-      appMode === 'mock'
+      usesLocalDemo
         ? 'Local packet created. Cloud extraction is unavailable in mock mode.'
         : 'Packet submitted. Processing will continue in the background.',
     )
@@ -473,7 +474,7 @@ export function App() {
             <HelpCircle size={19} />
             <span>Review guide</span>
           </button>
-          {appMode === 'production' && (
+          {appMode === 'production' && !usesLocalDemo && (
             <button
               className="nav-item"
               aria-label="Sign out"
@@ -486,11 +487,11 @@ export function App() {
           )}
           <div className="profile">
             <span className="avatar">
-              {appMode === 'mock' ? 'DR' : reviewer.slice(0, 2).toUpperCase()}
+              {usesLocalDemo ? 'DR' : reviewer.slice(0, 2).toUpperCase()}
             </span>
             <div>
               <strong>{reviewer}</strong>
-              <small>{appMode === 'mock' ? 'Demo workspace' : 'Claims reviewer'}</small>
+              <small>{usesLocalDemo ? 'Guided sample' : 'Claims reviewer'}</small>
             </div>
           </div>
         </div>
@@ -512,7 +513,7 @@ export function App() {
           </div>
           <div className="topbar-actions">
             <ThemeToggle />
-            {appMode === 'production' && (
+            {appMode === 'production' && !usesLocalDemo && (
               <button
                 className="icon-button mobile-signout"
                 aria-label="Sign out on mobile"
@@ -521,7 +522,7 @@ export function App() {
                 <LogOut size={18} />
               </button>
             )}
-            {appMode === 'mock' ? (
+            {usesLocalDemo ? (
               <span className="mock-badge">
                 <FlaskConical size={14} />
                 Mock mode <span>· Synthetic data</span>
@@ -740,7 +741,7 @@ export function App() {
                   <span>Packets in workspace</span>
                   <strong>{analyses.length.toString().padStart(2, '0')}</strong>
                   <small>
-                    {appMode === 'mock'
+                    {usesLocalDemo
                       ? 'Synthetic demonstration packets'
                       : 'Tenant-authorized analyses'}
                   </small>
@@ -769,7 +770,7 @@ export function App() {
               <section className="queue-panel">
                 <div className="queue-toolbar">
                   <h2>
-                    {appMode === 'mock' ? 'Sample packets' : 'Claim packets'}{' '}
+                    {usesLocalDemo ? 'Sample packets' : 'Claim packets'}{' '}
                     <span>{analyses.length}</span>
                   </h2>
                   <label className="search-field">
@@ -858,7 +859,7 @@ export function App() {
                   />
                 )}
               </section>
-              {appMode === 'mock' && (
+              {usesLocalDemo && (
                 <div className="demo-note">
                   <FlaskConical size={19} />
                   <div>
@@ -940,7 +941,7 @@ export function App() {
                   <span className="context-divider" />
                   <span>{analysis.documents.length} documents</span>
                 </div>
-                {appMode === 'mock' && (
+                {usesLocalDemo && (
                   <label className="scenario-switch">
                     <span className="sr-only">Switch sample packet</span>
                     <FlaskConical size={15} />
@@ -1379,7 +1380,7 @@ export function App() {
               <footer className="workspace-footer">
                 <span>
                   <LockKeyhole size={13} />
-                  {appMode === 'mock'
+                  {usesLocalDemo
                     ? 'Synthetic data · stored in this tab only'
                     : 'Tenant-authorized document access'}
                 </span>

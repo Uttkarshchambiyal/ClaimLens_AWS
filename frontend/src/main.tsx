@@ -4,6 +4,7 @@ import HeroDemo from '@/components/demo'
 import { AuthPage } from '@/components/AuthPage'
 import { ThemeProvider } from '@/components/ui/theme-provider'
 import { ClaimAssistant } from '@/components/ClaimAssistant'
+import { SampleWorkspace } from '@/components/SampleWorkspace'
 import './hero.css'
 
 const ReviewApp = lazy(() => import('./App').then((module) => ({ default: module.App })))
@@ -14,12 +15,15 @@ const isReview =
   routePath === '/review' ||
   routePath === '/auth/callback' ||
   new URLSearchParams(window.location.search).has('analysis')
+const isSample = routePath === '/sample'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider defaultTheme="light" enableSystem storageKey="claimlens-theme">
       {authMode ? (
         <AuthPage mode={authMode} />
+      ) : isSample ? (
+        <SampleWorkspace />
       ) : isReview ? (
         <Suspense
           fallback={

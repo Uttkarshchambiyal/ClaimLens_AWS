@@ -11,7 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
-import { appMode, getDocumentSource } from '../api'
+import { appMode, getDocumentSource, usesLocalDemo } from '../api'
 import type { Analysis, EvidenceRef } from '../types'
 
 function PdfPage({
@@ -136,7 +136,7 @@ export function SourceViewer({
   useEffect(() => {
     setSource(undefined)
     setError('')
-    if (appMode === 'mock' || !evidence) return
+    if (usesLocalDemo || !evidence) return
     let active = true
     getDocumentSource(analysis.claimId, evidence.documentId, token)
       .then((result) => {
@@ -241,7 +241,7 @@ export function SourceViewer({
               </button>
             </div>
           </div>
-          {appMode === 'mock' && (
+          {usesLocalDemo && (
             <div className="viewer-notice">Synthetic evidence sheet · not an uploaded PDF</div>
           )}
           <div className="document-stage">
@@ -256,14 +256,14 @@ export function SourceViewer({
                   Retry source
                 </button>
               </div>
-            ) : appMode !== 'mock' && !source ? (
+            ) : !usesLocalDemo && !source ? (
               <div className="empty-state compact">
                 <Loader2 className="spin" />
                 <p>Loading private source…</p>
               </div>
             ) : (
               <div className="document-sheet" style={{ width: zoom + '%' }}>
-                {appMode === 'mock' ? (
+                {usesLocalDemo ? (
                   <div className="synthetic-sheet">
                     <div className="sheet-letterhead">
                       <strong>CLAIMLENS</strong>

@@ -35,6 +35,7 @@ const SERVICES = [
 
 export interface HeroSectionProps {
   reviewHref?: string
+  sampleHref?: string
   loginHref?: string
   signupHref?: string
   className?: string
@@ -57,7 +58,7 @@ function firstName(user: ClaimLensUser) {
   return first.charAt(0).toUpperCase() + first.slice(1)
 }
 
-function SamplePreview({ reviewHref, close }: { reviewHref: string; close: () => void }) {
+function SamplePreview({ sampleHref, close }: { sampleHref: string; close: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
     dialog.current?.showModal()
@@ -98,7 +99,7 @@ function SamplePreview({ reviewHref, close }: { reviewHref: string; close: () =>
         <ShieldCheck size={16} /> This finding asks for human review. It does not decide whether a
         claim should be paid.
       </p>
-      <a href={reviewHref} className="aero-dialog-cta">
+      <a href={sampleHref} className="aero-dialog-cta">
         <ArrowAction>Open review workspace</ArrowAction>
       </a>
     </dialog>
@@ -107,6 +108,7 @@ function SamplePreview({ reviewHref, close }: { reviewHref: string; close: () =>
 
 export default function HeroSection({
   reviewHref = '/review',
+  sampleHref = reviewHref,
   loginHref = '/auth/login',
   signupHref = '/auth/signup',
   className,
@@ -376,9 +378,9 @@ export default function HeroSection({
           </a>
         </div>
       </section>
-      <CinematicReviewFooter reviewHref={reviewHref} />
+      <CinematicReviewFooter reviewHref={sampleHref} />
       <ClaimLensFooter loginHref={loginHref} reviewHref={reviewHref} />
-      {previewOpen && <SamplePreview reviewHref={reviewHref} close={() => setPreviewOpen(false)} />}
+      {previewOpen && <SamplePreview sampleHref={sampleHref} close={() => setPreviewOpen(false)} />}
     </div>
   )
 }

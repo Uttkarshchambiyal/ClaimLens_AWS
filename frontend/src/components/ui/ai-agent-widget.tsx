@@ -12,7 +12,7 @@ import {
   Minimize2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { appMode } from '@/appConfig'
+import { usesLocalDemo } from '@/appConfig'
 import { askAssistant } from '@/api'
 import { demoAnalysis } from '@/mockData'
 import { ShinyButton } from './shiny-button'
@@ -146,10 +146,9 @@ export function AIAgentWidget() {
     {
       id: 'welcome',
       role: 'assistant',
-      content:
-        appMode === 'mock'
-          ? 'Hi! I’m your ClaimLens demo assistant. I can explain the current packet’s findings and point you to evidence. What would you like to review?'
-          : 'Hi! I can summarize the current review and point you to its cited evidence. What would you like to inspect?',
+      content: usesLocalDemo
+        ? 'Hi! I’m your ClaimLens demo assistant. I can explain the current packet’s findings and point you to evidence. What would you like to review?'
+        : 'Hi! I can summarize the current review and point you to its cited evidence. What would you like to inspect?',
       timestamp: new Date(),
     },
   ])
@@ -194,17 +193,16 @@ export function AIAgentWidget() {
       setIsTyping(true)
 
       try {
-        const content =
-          appMode === 'mock'
-            ? await new Promise<string>((resolve) =>
-                setTimeout(() => resolve(getMockResponse(text)), 350),
+        const content = usesLocalDemo
+          ? await new Promise<string>((resolve) =>
+              setTimeout(() => resolve(getMockResponse(text)), 350),
+            )
+          : (
+              await askAssistant(
+                text,
+                new URLSearchParams(window.location.search).get('analysis') || undefined,
               )
-            : (
-                await askAssistant(
-                  text,
-                  new URLSearchParams(window.location.search).get('analysis') || undefined,
-                )
-              ).answer
+            ).answer
         setMessages((prev) => [
           ...prev,
           { id: crypto.randomUUID(), role: 'assistant', content, timestamp: new Date() },
@@ -287,7 +285,7 @@ export function AIAgentWidget() {
               <div>
                 <h3 className="text-sm font-semibold">ClaimLens AI</h3>
                 <p className="text-[10px]" style={{ opacity: 0.6 }}>
-                  {appMode === 'mock' ? 'Mock mode · No AWS calls' : 'Live assistant unavailable'}
+                  {usesLocalDemo ? 'Guided sample · No AWS calls' : 'Live assistant unavailable'}
                 </p>
               </div>
             </div>
