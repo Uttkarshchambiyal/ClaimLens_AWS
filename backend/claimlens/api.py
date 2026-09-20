@@ -13,11 +13,17 @@ from .repository import DynamoRepository, NotFound, RequestInProgress, TenantDen
 from .service import AnalysisService
 
 
+def _json_default(value: Any):
+    if isinstance(value, Decimal):
+        return int(value) if value == value.to_integral_value() else float(value)
+    raise TypeError(f"Object of type {value.__class__.__name__} is not JSON serializable")
+
+
 class StepFunctionsOrchestrator:
     def __init__(self, client, arn: str): self.client, self.arn = client, arn
     def start(self, analysis_id: str, payload: dict[str, Any]) -> None:
         try:
-            self.client.start_execution(stateMachineArn=self.arn, name=analysis_id.replace("_", "-")[:80], input=json.dumps(payload))
+            self.client.start_execution(stateMachineArn=self.arn, name=analysis_id.replace("_", "-")[:80], input=json.dumps(payload, default=_json_default))
         except Exception as exc:
             if exc.__class__.__name__ != "ExecutionAlreadyExists":
                 raise
@@ -32,7 +38,7 @@ def _aws_dependencies(settings: Settings):
 
 
 def _response(status: int, body: Any):
-    return {"statusCode": status, "headers": {"Content-Type": "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Access-Control-Allow-Origin": os.getenv("ALLOWED_ORIGIN", "")}, "body": json.dumps(body, default=lambda value: (int(value) if value == value.to_integral_value() else float(value)) if isinstance(value, Decimal) else str(value))}
+    return {"statusCode": status, "headers": {"Content-Type": "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Access-Control-Allow-Origin": os.getenv("ALLOWED_ORIGIN", "")}, "body": json.dumps(body, default=_json_default)}
 
 
 def _tenant(event: dict[str, Any], settings: Settings) -> str:

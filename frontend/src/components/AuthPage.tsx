@@ -24,16 +24,21 @@ export function AuthPage({ mode }: { mode: Mode }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
+  const destination = () => {
+    const returnTo = new URLSearchParams(window.location.search).get('returnTo')
+    return returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
+  }
+
   useEffect(() => {
     configureAuth()
     void getCurrentUser()
-      .then(() => window.location.replace('/review'))
+      .then(() => window.location.replace(destination()))
       .catch(() => undefined)
   }, [])
 
   const finish = () => {
-    const returnTo = new URLSearchParams(window.location.search).get('returnTo')
-    window.location.assign(returnTo?.startsWith('/') ? returnTo : '/review')
+    window.dispatchEvent(new Event('claimlens:auth-changed'))
+    window.location.replace(destination())
   }
 
   const submitDetails = async (event: FormEvent) => {

@@ -4,6 +4,7 @@ import {
   Activity as ActivityIcon,
   ArrowDownToLine,
   ArrowRight,
+  BarChart3,
   Check,
   CheckCheck,
   ChevronDown,
@@ -38,6 +39,7 @@ import {
 import { requireUser, signOut } from './auth'
 import { UploadDialog } from './components/UploadDialog'
 import { SourceViewer } from './components/SourceViewer'
+import { ClaimAnalytics, QueueAnalytics } from './components/ReviewAnalytics'
 import { ThemeToggle } from './components/ui/theme-toggle'
 import type {
   Analysis,
@@ -78,10 +80,10 @@ const timestamp = (value: string) =>
 const needsReview = (finding: Finding) =>
   ['FINDING', 'INSUFFICIENT_EVIDENCE', 'ERROR'].includes(finding.status)
 const pending = (analysis: Analysis) => ['QUEUED', 'PROCESSING'].includes(analysis.status)
-type WorkspaceView = 'workspace' | 'queue' | 'activity'
+type WorkspaceView = 'dashboard' | 'workspace' | 'queue' | 'activity'
 const viewFromUrl = (): WorkspaceView => {
   const value = new URLSearchParams(window.location.search).get('view')
-  return value === 'queue' || value === 'activity' ? value : 'workspace'
+  return value === 'dashboard' || value === 'queue' || value === 'activity' ? value : 'workspace'
 }
 function StatusIcon({ status, size = 16 }: { status: CheckStatus; size?: number }) {
   return status === 'PASS' ? (
@@ -195,7 +197,7 @@ export function App() {
   const [analyses, setAnalyses] = useState<Analysis[]>([])
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [view, setView] = useState<WorkspaceView>(viewFromUrl)
-  const [tab, setTab] = useState<'findings' | 'documents'>('findings')
+  const [tab, setTab] = useState<'findings' | 'documents' | 'insights'>('findings')
   const [filter, setFilter] = useState('ALL')
   const [query, setQuery] = useState('')
   const [selectedId, setSelectedId] = useState('')
@@ -231,7 +233,7 @@ export function App() {
       if (request !== sequence.current) return
       setAnalyses(records)
       setAnalysis(initial || null)
-      setView(initial ? viewFromUrl() : 'queue')
+      setView(initial ? viewFromUrl() : 'dashboard')
       setQuery('')
       setFilter('ALL')
       setSelectedId('')
@@ -411,6 +413,16 @@ export function App() {
         <div className="workspace-label">REVIEW WORKSPACE</div>
         <nav aria-label="Main navigation">
           <button
+            aria-label="Dashboard"
+            title="Dashboard"
+            aria-current={view === 'dashboard' ? 'page' : undefined}
+            className={'nav-item ' + (view === 'dashboard' ? 'active' : '')}
+            onClick={() => navigate('dashboard')}
+          >
+            <LayoutDashboard size={19} />
+            <span>Dashboard</span>
+          </button>
+          <button
             aria-label="Review queue"
             title="Review queue"
             aria-current={view === 'queue' ? 'page' : undefined}
@@ -419,7 +431,7 @@ export function App() {
               navigate('queue')
             }}
           >
-            <LayoutDashboard size={19} />
+            <FileSearch size={19} />
             <span>Review queue</span>
             <b>{analyses.length}</b>
           </button>
@@ -488,11 +500,13 @@ export function App() {
             <span>Workspace</span>
             <ChevronRight size={14} />
             <strong>
-              {view === 'queue'
-                ? 'Review queue'
-                : view === 'activity'
-                  ? 'Activity'
-                  : analysis?.claimId || 'Claim review'}
+              {view === 'dashboard'
+                ? 'Dashboard'
+                : view === 'queue'
+                  ? 'Review queue'
+                  : view === 'activity'
+                    ? 'Activity'
+                    : analysis?.claimId || 'Claim review'}
             </strong>
           </div>
           <div className="topbar-actions">
@@ -549,11 +563,13 @@ export function App() {
                 {view === 'workspace' ? 'Claim integrity review' : 'Your workspace'}
               </div>
               <h1>
-                {view === 'queue'
-                  ? 'Review queue'
-                  : view === 'activity'
-                    ? 'Review activity'
-                    : analysis?.claimId || 'Claim review'}
+                {view === 'dashboard'
+                  ? 'Review dashboard'
+                  : view === 'queue'
+                    ? 'Review queue'
+                    : view === 'activity'
+                      ? 'Review activity'
+                      : analysis?.claimId || 'Claim review'}
                 {view === 'workspace' && analysis && (
                   <span className={'priority priority-' + analysis.reviewPriority.toLowerCase()}>
                     {analysis.reviewPriority.toLowerCase()} priority
@@ -561,11 +577,13 @@ export function App() {
                 )}
               </h1>
               <p>
-                {view === 'queue'
-                  ? 'A clear view of every packet that needs your attention.'
-                  : view === 'activity'
-                    ? 'Review dispositions and corrections for the selected claim.'
-                    : 'Inspect discrepancies, follow the evidence, and record your review.'}
+                {view === 'dashboard'
+                  ? 'Understand workload, extraction quality, and review progress at a glance.'
+                  : view === 'queue'
+                    ? 'A clear view of every packet that needs your attention.'
+                    : view === 'activity'
+                      ? 'Review dispositions and corrections for the selected claim.'
+                      : 'Inspect discrepancies, follow the evidence, and record your review.'}
               </p>
             </div>
             <div className="heading-actions">
@@ -595,6 +613,117 @@ export function App() {
               <h3>Opening your workspace</h3>
               <p>Loading claims and review records…</p>
             </div>
+          ) : view === 'dashboard' ? (
+            <>
+              <div className="queue-metrics dashboard-metrics">
+                <div>
+                  <span>Total packets</span>
+                  <strong>{analyses.length.toString().padStart(2, '0')}</strong>
+                  <small>Visible in your private workspace</small>
+                </div>
+                <div>
+                  <span>Ready for review</span>
+                  <strong>
+                    {analyses
+                      .filter((item) =>
+                        ['COMPLETED', 'COMPLETED_WITH_WARNINGS'].includes(item.status),
+                      )
+                      .length.toString()
+                      .padStart(2, '0')}
+                  </strong>
+                  <small>Extraction and checks completed</small>
+                </div>
+                <div>
+                  <span>Processing now</span>
+                  <strong>{analyses.filter(pending).length.toString().padStart(2, '0')}</strong>
+                  <small>Updates automatically in the background</small>
+                </div>
+                <div>
+                  <span>Average quality</span>
+                  <strong>
+                    {analyses.length
+                      ? Math.round(
+                          analyses.reduce((total, item) => total + item.extractionQuality, 0) /
+                            analyses.length,
+                        )
+                      : 0}
+                    <small>%</small>
+                  </strong>
+                  <small>Across all extracted packets</small>
+                </div>
+              </div>
+              <QueueAnalytics analyses={analyses} />
+              <section className="dashboard-flow" aria-labelledby="review-path-title">
+                <div className="analytics-heading">
+                  <div>
+                    <span className="eyebrow">How your data moves</span>
+                    <h2 id="review-path-title">One transparent review path</h2>
+                    <p>Every stage stays visible, from upload through the human decision.</p>
+                  </div>
+                </div>
+                <div className="dashboard-flow-grid">
+                  <div>
+                    <FileText size={20} />
+                    <span>01</span>
+                    <strong>Upload</strong>
+                    <small>Secure packet intake</small>
+                  </div>
+                  <div>
+                    <FileSearch size={20} />
+                    <span>02</span>
+                    <strong>Extract</strong>
+                    <small>Textract reads source fields</small>
+                  </div>
+                  <div>
+                    <ShieldCheck size={20} />
+                    <span>03</span>
+                    <strong>Verify</strong>
+                    <small>Rules find review signals</small>
+                  </div>
+                  <div>
+                    <CheckCheck size={20} />
+                    <span>04</span>
+                    <strong>Decide</strong>
+                    <small>A reviewer records the outcome</small>
+                  </div>
+                </div>
+              </section>
+              <section className="dashboard-recent" aria-labelledby="recent-packets-title">
+                <div className="panel-header">
+                  <div>
+                    <span className="eyebrow">Recent work</span>
+                    <h2 id="recent-packets-title">Latest claim packets</h2>
+                  </div>
+                  <button className="text-button" onClick={() => navigate('queue')}>
+                    View full queue <ArrowRight size={16} />
+                  </button>
+                </div>
+                <div className="dashboard-recent-grid">
+                  {analyses.slice(0, 3).map((item) => (
+                    <button key={item.id} onClick={() => void selectAnalysis(item.id)}>
+                      <span className={'priority priority-' + item.reviewPriority.toLowerCase()}>
+                        {item.reviewPriority.toLowerCase()}
+                      </span>
+                      <strong>{item.claimId}</strong>
+                      <small>
+                        {item.findings.filter(needsReview).length} findings ·{' '}
+                        {item.documents.length} documents
+                      </small>
+                      <span className="recent-coverage">
+                        <i style={{ width: `${item.coverage}%` }} />
+                        {item.coverage}% coverage
+                      </span>
+                    </button>
+                  ))}
+                  {!analyses.length && (
+                    <Empty
+                      title="No packets yet"
+                      detail="Upload your first packet to populate this dashboard."
+                    />
+                  )}
+                </div>
+              </section>
+            </>
           ) : view === 'queue' ? (
             <>
               <div className="queue-metrics">
@@ -874,14 +1003,17 @@ export function App() {
                   onKeyDown={(event) => {
                     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
                     event.preventDefault()
+                    const tabs = ['findings', 'documents', 'insights'] as const
+                    const current = tabs.indexOf(tab)
                     const next =
                       event.key === 'Home'
-                        ? 'findings'
+                        ? tabs[0]
                         : event.key === 'End'
-                          ? 'documents'
-                          : tab === 'findings'
-                            ? 'documents'
-                            : 'findings'
+                          ? tabs[tabs.length - 1]
+                          : tabs[
+                              (current + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) %
+                                tabs.length
+                            ]
                     setTab(next)
                     document.getElementById('review-' + next + '-tab')?.focus()
                   }}
@@ -910,6 +1042,18 @@ export function App() {
                     <Layers3 size={17} />
                     Documents<span>{analysis.documents.length}</span>
                   </button>
+                  <button
+                    role="tab"
+                    id="review-insights-tab"
+                    aria-controls="review-insights-panel"
+                    tabIndex={tab === 'insights' ? 0 : -1}
+                    aria-selected={tab === 'insights'}
+                    className={tab === 'insights' ? 'active' : ''}
+                    onClick={() => setTab('insights')}
+                  >
+                    <BarChart3 size={17} />
+                    Insights
+                  </button>
                 </div>
                 <span className="review-hint">
                   <ShieldCheck size={15} />
@@ -934,6 +1078,26 @@ export function App() {
                       Back to queue
                     </button>
                   </div>
+                ) : analysis.status === 'FAILED' ? (
+                  <div className="processing-panel processing-failed" role="alert">
+                    <CircleAlert size={30} />
+                    <span className="eyebrow">Processing stopped safely</span>
+                    <h3>This packet could not be analyzed</h3>
+                    <p>
+                      The documents were uploaded, but a cloud extraction step failed. ClaimLens did
+                      not create findings from incomplete evidence.
+                    </p>
+                    <div className="failure-actions">
+                      <button className="button secondary" onClick={() => navigate('queue')}>
+                        Back to queue
+                      </button>
+                      <button className="button primary" onClick={() => setUploadOpen(true)}>
+                        <Plus size={17} /> Try a new packet
+                      </button>
+                    </div>
+                  </div>
+                ) : tab === 'insights' ? (
+                  <ClaimAnalytics analysis={analysis} />
                 ) : tab === 'documents' ? (
                   <section className="documents-panel">
                     {analysis.documents.map((doc) => (

@@ -83,4 +83,18 @@ describe('ClaimLens opening hero', () => {
     expect(screen.queryByRole('link', { name: 'Create account' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Log in' })).not.toBeInTheDocument()
   })
+
+  it('refreshes a restored landing page after authentication changes', async () => {
+    render(<HeroSection />)
+    expect(await screen.findByRole('link', { name: 'Create account' })).toBeVisible()
+
+    auth.getOptionalUser.mockResolvedValue({
+      id_token: 'fresh-token',
+      profile: { name: 'Uttkarsh Chambiyal', email: 'uttkarsh@example.com' },
+    })
+    window.dispatchEvent(new Event('pageshow'))
+
+    expect(await screen.findByRole('link', { name: 'Welcome, Uttkarsh' })).toBeVisible()
+    expect(screen.queryByRole('link', { name: 'Create account' })).not.toBeInTheDocument()
+  })
 })

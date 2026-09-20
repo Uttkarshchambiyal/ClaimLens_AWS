@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-19T21:49:52.172377+00:00",
+  "checkedAt": "2026-09-20T04:46:03.618615+00:00",
   "scope": "Local tests, static validation, and mock browser acceptance only; no deployment or live cloud verification.",
   "checks": [
     {
@@ -15,7 +15,7 @@
     {
       "check": "backend_tests",
       "status": "PASS",
-      "output": "....................................................................     [100%]\n68 passed in 1.19s\n"
+      "output": ".....................................................................    [100%]\n69 passed in 1.02s\n"
     },
     {
       "check": "quality_benchmark",
@@ -25,7 +25,7 @@
     {
       "check": "large_packet_benchmark",
       "status": "PASS",
-      "output": "{\n  \"checkedAt\": \"2026-09-19T21:49:38.963856+00:00\",\n  \"scope\": \"Local maximum-shape benchmark only; does not measure AWS service latency or quotas.\",\n  \"documents\": 10,\n  \"fields\": 120,\n  \"serializedFieldBytes\": 53783,\n  \"configuredFieldLimit\": 120,\n  \"configuredCombinedByteLimit\": 220000,\n  \"elapsedMs\": 3.361,\n  \"analysisStatus\": \"COMPLETED_WITH_WARNINGS\",\n  \"withinBounds\": true\n}\n"
+      "output": "{\n  \"checkedAt\": \"2026-09-20T04:45:47.799904+00:00\",\n  \"scope\": \"Local maximum-shape benchmark only; does not measure AWS service latency or quotas.\",\n  \"documents\": 10,\n  \"fields\": 120,\n  \"serializedFieldBytes\": 53783,\n  \"configuredFieldLimit\": 120,\n  \"configuredCombinedByteLimit\": 220000,\n  \"elapsedMs\": 3.469,\n  \"analysisStatus\": \"COMPLETED_WITH_WARNINGS\",\n  \"withinBounds\": true\n}\n"
     },
     {
       "check": "evaluation_artifact",
@@ -45,12 +45,12 @@
     {
       "check": "frontend_tests",
       "status": "PASS",
-      "output": "\n> claimlens-frontend@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.1 /Volumes/MY_HUB/AWS HACKATHONE/frontend\n\n\n Test Files  4 passed (4)\n      Tests  17 passed (17)\n   Start at  03:19:40\n   Duration  2.22s (environment 37%, tests 28%, import 18%, transform 9%, setup 7%)\n\n"
+      "output": "\n> claimlens-frontend@0.1.0 test\n> vitest run\n\n\n RUN  v5.0.1 /Volumes/MY_HUB/AWS HACKATHONE/frontend\n\n\n Test Files  4 passed (4)\n      Tests  18 passed (18)\n   Start at  10:15:49\n   Duration  2.86s (environment 34%, tests 29%, import 22%, transform 8%, setup 6%)\n\n"
     },
     {
       "check": "production_build",
       "status": "PASS",
-      "output": "\n> claimlens-frontend@0.1.0 build\n> tsc -p tsconfig.app.json --noEmit && vite build\n\nvite v8.3.0 building client environment for production...\ntransforming...\n\u2713 2492 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                              0.57 kB \u2502 gzip:   0.35 kB\ndist/assets/pdf.worker.min-Dswkl-cV.mjs  1,265.41 kB\ndist/assets/index-BBAZdIaZ.css              29.69 kB \u2502 gzip:   7.39 kB\ndist/assets/App-B3RflhCR.css                44.78 kB \u2502 gzip:   9.09 kB\ndist/assets/App-B2Vxtupp.js                 43.93 kB \u2502 gzip:  12.82 kB\ndist/assets/index-DnwhIbNT.js              399.69 kB \u2502 gzip: 121.69 kB\ndist/assets/pdf-D31PdxJK.js                430.93 kB \u2502 gzip: 129.03 kB\n\n\u2713 built in 450ms\n"
+      "output": "\n> claimlens-frontend@0.1.0 build\n> tsc -p tsconfig.app.json --noEmit && vite build\n\nvite v8.3.0 building client environment for production...\ntransforming...\n\u2713 3067 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                              0.57 kB \u2502 gzip:   0.34 kB\ndist/assets/pdf.worker.min-Dswkl-cV.mjs  1,265.41 kB\ndist/assets/index-Dxw6UZpd.css              30.05 kB \u2502 gzip:   7.49 kB\ndist/assets/App-Cpv0uXcr.css                50.25 kB \u2502 gzip:  10.22 kB\ndist/assets/index-DdwqRZoc.js              400.38 kB \u2502 gzip: 121.87 kB\ndist/assets/pdf-DkWLbaCA.js                430.93 kB \u2502 gzip: 129.03 kB\ndist/assets/App-BxF2U4uq.js                445.96 kB \u2502 gzip: 127.03 kB\n\n\u2713 built in 485ms\n"
     },
     {
       "check": "formatting",
@@ -69,6 +69,6 @@
   "browserSmokeVerified": true,
   "qualityBenchmarkVerified": true,
   "largePacketBenchmarkVerified": true,
-  "browserVisualVerified": true,
+  "browserVisualVerified": false,
   "readiness": "LOCAL_CHECKS_PASS_CLOUD_GATE_PENDING"
 }
