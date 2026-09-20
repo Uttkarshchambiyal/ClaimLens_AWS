@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { appMode } from '@/appConfig'
 import { getOptionalUser, type ClaimLensUser } from '@/auth'
+import { CinematicReviewFooter } from './cinematic-review-footer'
 
 const SERVICES = [
   { name: 'Amazon S3', icon: Layers3 },
@@ -374,6 +375,7 @@ export default function HeroSection({
           </a>
         </div>
       </section>
+      <CinematicReviewFooter reviewHref={reviewHref} />
       <footer className="aero-footer">
         <a href="/" className="aero-footer-brand" aria-label="ClaimLens home">
           <span>
