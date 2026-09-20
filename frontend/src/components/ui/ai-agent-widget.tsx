@@ -180,16 +180,14 @@ export function AIAgentWidget() {
     <>
       {/* Floating trigger button */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-[9999]">
+        <div className="fixed bottom-6 right-6 z-50">
           <ShinyButton
+            className="flex items-center gap-2 shadow-xl shadow-black/20"
             onClick={() => setIsOpen(true)}
-            compact
-            aria-label="Open AI assistant"
+            aria-label="Open ClaimLens AI Assistant"
           >
-            <span className="flex items-center gap-2">
-              <Sparkles size={18} />
-              AI Assistant
-            </span>
+            <Sparkles size={20} />
+            <span>Ask ClaimLens</span>
           </ShinyButton>
         </div>
       )}

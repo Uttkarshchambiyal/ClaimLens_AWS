@@ -237,8 +237,13 @@ export function App() {
       setSelectedId('')
       setEvidenceId('')
     } catch (e) {
-      if (request === sequence.current)
-        setError(e instanceof Error ? e.message : 'Unable to load your review workspace.')
+      if (request === sequence.current) {
+        let msg = e instanceof Error ? e.message : 'Unable to load your review workspace.'
+        if (msg.includes('Failed to fetch')) {
+          msg = 'Failed to connect to the backend API. If you are running locally, ensure your API Gateway CORS settings allow localhost, or switch VITE_APP_MODE to mock in .env.'
+        }
+        setError(msg)
+      }
     } finally {
       if (request === sequence.current) setLoading(false)
     }
