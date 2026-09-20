@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import HeroDemo from '@/components/demo'
 import { AuthPage } from '@/components/AuthPage'
 import { ThemeProvider } from '@/components/ui/theme-provider'
+import { AIAgentWidget } from '@/components/ui/ai-agent-widget'
 import './hero.css'
 
 const ReviewApp = lazy(() => import('./App').then((module) => ({ default: module.App })))
@@ -32,6 +33,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       ) : (
         <HeroDemo />
       )}
+      <AIAgentWidget />
     </ThemeProvider>
   </React.StrictMode>,
 )
